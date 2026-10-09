@@ -61,19 +61,22 @@ raw data ──► explore (one notebook per distributor) ──► documented c
 | `docs/team_workflow.md` | Git/GitHub workflow, incl. a beginner guide |
 | `docs/open_questions.md` | Questions for the client or the team |
 | `docs/decisions.md` | Decision log |
-| `data/` | Local data only (git-ignored). See `data/README.md` |
+| `docs/onboarding.md` | Setup guide for new teammates (no coding needed) |
+| `data/` | Links to the team's Google Drive data (git-ignored). See `data/README.md` |
 | `notebooks/` | Exploratory notebooks (one per distributor) |
 | `src/` | Reusable code, once patterns repeat |
 | `reports/` | Generated outputs (git-ignored) |
 | `tests/` | Validation checks on transformations |
 | `AGENTS.md` | Rules for AI coding assistants |
+| `private/` | Local-only files such as the name key (git-ignored) |
+| `requirements.txt` | Python packages for notebooks |
 
 ## Getting started
 
-1. Clone the repo: `git clone <repo-url>`
-2. Get `KEY.md` from Alexandre through the team's private channel and save it as `private/KEY.md`.
-3. Put the raw files you own in the matching `data/raw/<distributor>/` folder, unchanged.
-4. Read `docs/methodology.md` and `docs/team_workflow.md` before your first commit.
+Follow **[docs/onboarding.md](docs/onboarding.md)**: step-by-step setup with Cursor + Codex,
+written for teammates who have never coded. In short: install Google Drive for desktop (LionMail account), put `KEY.md` in `private/`, then ask
+Codex to set up the project (Python environment, link to the Drive data, automatic notebook-output
+stripping).
 
 ## Confidentiality
 
