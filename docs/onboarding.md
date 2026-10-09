@@ -15,36 +15,32 @@ Cursor → **File → Open Folder** → select the `ops-consulting-oos` folder.
 - In ChatGPT (the account Codex uses): **Settings → Data controls → turn off "Improve the model for everyone"**.
 - In Cursor: **Settings → search "Privacy Mode" → turn it on**.
 
-## 3. Get the data (never through GitHub)
+## 3. Connect to the team's Google Drive (once)
 
-The raw files and `KEY.md` are in the **team's shared data folder** (ask Alexandre for the link).
+The raw data stays in the team's **LionMail Google Drive**. The project reads it from there: nothing
+is downloaded or copied by hand, and new files appear automatically.
 
-1. Copy `KEY.md` into the `private/` folder of the project.
-2. Copy your raw files into the matching folder, without renaming or opening them in Excel first
-   (saving from Excel can change dates and formats):
-
-   | Data | Folder |
-   |---|---|
-   | Distributor A | `data/raw/distributor_a/` |
-   | Distributor B | `data/raw/distributor_b/` |
-   | Distributor C | `data/raw/distributor_c/` |
-   | Distributor D | `data/raw/distributor_d/` |
-   | Master Data | `data/raw/master_data/` |
-
-   `KEY.md` tells you which real distributor each code is.
-3. Check: in Cursor's file panel, the data files appear **greyed out**. That means Git ignores
-   them and they will never be uploaded. They must **not** appear in the Source Control panel.
+1. Install **Google Drive for desktop** (https://www.google.com/drive/download/) and sign in with
+   your **Columbia (LionMail)** account.
+2. In Google Drive on the web, go to **Shared with me**, right-click the project folder →
+   **Organize → Add shortcut → My Drive**. (Drive for desktop only shows what is in My Drive.)
+3. Download `KEY.md` from that folder and put it in the project's `private/` folder.
 
 ## 4. First message to Codex (setup, once)
 
 Copy-paste this into Codex:
 
-> Read AGENTS.md and docs/onboarding.md. I'm new to coding. Get the latest version of the
-> project, set up the Python environment, and check that everything works. Explain each step
-> briefly in plain English.
+> Read AGENTS.md and docs/onboarding.md. I'm new to coding. Set up the project on my computer:
+> get the latest version, set up the Python environment, and connect the project to Google Drive.
+> Explain each step briefly in plain English.
 
 Codex will ask permission to run commands. If you don't understand one, ask it
 *"What does this do?"* before approving.
+
+At the end, in Cursor's file panel, `data/raw/distributor_c` (etc.) show the Drive files, greyed out:
+Git ignores them and they will never be uploaded. They must **not** appear in the Source Control panel.
+
+**Never edit, rename or delete files inside `data/raw/`**: they are the team's shared Drive files.
 
 ## 5. Everyday prompts
 

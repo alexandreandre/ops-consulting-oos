@@ -62,7 +62,7 @@ raw data ──► explore (one notebook per distributor) ──► documented c
 | `docs/open_questions.md` | Questions for the client or the team |
 | `docs/decisions.md` | Decision log |
 | `docs/onboarding.md` | Setup guide for new teammates (no coding needed) |
-| `data/` | Local data only (git-ignored). See `data/README.md` |
+| `data/` | Links to the team's Google Drive data (git-ignored). See `data/README.md` |
 | `notebooks/` | Exploratory notebooks (one per distributor) |
 | `src/` | Reusable code, once patterns repeat |
 | `reports/` | Generated outputs (git-ignored) |
@@ -74,9 +74,9 @@ raw data ──► explore (one notebook per distributor) ──► documented c
 ## Getting started
 
 Follow **[docs/onboarding.md](docs/onboarding.md)**: step-by-step setup with Cursor + Codex,
-written for teammates who have never coded. In short: clone the repo, copy `KEY.md` and your raw
-files from the team's shared data folder into `private/` and `data/raw/<code>/`, then ask Codex to
-set up the environment (Python, `requirements.txt`, automatic notebook-output stripping).
+written for teammates who have never coded. In short: install Google Drive for desktop (LionMail account), put `KEY.md` in `private/`, then ask
+Codex to set up the project (Python environment, link to the Drive data, automatic notebook-output
+stripping).
 
 ## Confidentiality
 
