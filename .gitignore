@@ -32,7 +32,8 @@ data/**
 *.numbers
 
 # Local-only name key and private notes (share outside GitHub)
-private/
+private/*
+!private/README.md
 
 # Generated outputs
 reports/**

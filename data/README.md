@@ -11,6 +11,8 @@ each team member's machine or in the team's approved storage, never on GitHub.
 | `cleaned/` | One cleaned version per source table | Produced by documented rules only |
 | `standardized/` | Common cross-distributor representation | Only after source differences are understood |
 
+- Raw files come from the team's shared data folder (link from Alexandre). Copy them into
+  `raw/<code>/`; never commit them.
 - Keep original file names in `raw/` so every file can be traced back to what the client sent.
 - Record each new file in `docs/data_dictionary.md` (no client names, use codes).
 - The mapping between codes and real distributors is in `private/KEY.md` (local only).

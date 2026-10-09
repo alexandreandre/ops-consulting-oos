@@ -1,0 +1,6 @@
+# Python >= 3.10
+pandas>=2.2
+openpyxl>=3.1      # read .xlsx files
+matplotlib>=3.8
+ipykernel>=6.29    # run notebooks inside Cursor
+nbstripout>=0.7    # remove notebook outputs automatically at commit
