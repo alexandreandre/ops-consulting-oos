@@ -1,0 +1,70 @@
+# ---- Client data: never committed ------------------------------------------
+# Everything under data/ is ignored except READMEs and .gitkeep placeholders.
+data/**
+!data/**/
+!data/README.md
+!data/**/.gitkeep
+
+# Data / document formats anywhere in the repo
+*.csv
+*.tsv
+*.xlsx
+*.xlsm
+*.xls
+*.xlsb
+*.parquet
+*.feather
+*.pkl
+*.pickle
+*.h5
+*.db
+*.sqlite
+*.json.gz
+*.zip
+*.7z
+*.pdf
+*.pptx
+*.ppt
+*.docx
+*.doc
+*.pages
+*.key
+*.numbers
+
+# Local-only name key and private notes (share outside GitHub)
+private/
+
+# Generated outputs
+reports/**
+!reports/README.md
+outputs/
+figures/
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.html
+
+# ---- Secrets and environments ----------------------------------------------
+.env
+.env.*
+*.pem
+*.p12
+credentials*
+secrets*
+.venv/
+venv/
+env/
+.conda/
+
+# ---- Python / notebooks ----------------------------------------------------
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+
+# ---- OS / editors ----------------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
