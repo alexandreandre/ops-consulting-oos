@@ -1,0 +1,4 @@
+# Cursor's AI features never read or index these (see DATA_POLICY.md).
+data/
+!data/README.md
+private/

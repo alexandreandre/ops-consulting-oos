@@ -1,29 +1,33 @@
 # Instructions for AI assistants (Codex, Cursor, Claude Code, etc.)
 
-Read `README.md` first, then the relevant file in `docs/`. Some teammates are new to
-coding: see "Working with teammates new to coding" below.
+Read `README.md` and `DATA_POLICY.md` first, then the relevant file in `docs/`. Some teammates
+are new to coding: see "Working with teammates new to coding" below.
 
-## Confidentiality rules (non-negotiable)
+## Confidentiality rules (non-negotiable, see DATA_POLICY.md)
 
 - The client and its distributors are **anonymized** in every tracked file:
-  "the client", "Distributor A–D", "Master Data".
-- If `private/KEY.md` exists locally, you may read it to understand which real
-  company a code refers to, but **never write real client, distributor or
-  stakeholder names into any tracked file**, commit message, branch name or PR.
-  This includes file paths, sheet names and column names typed in notebooks:
-  select files with a pattern and sheets/columns by position (see `data/README.md`).
-- Never commit anything from `data/` except `README.md` and `.gitkeep` files.
+  "the client", "Distributor A–D", "Master Data", "Planning".
+- Read `private/KEY.md` only to set up the Drive links. **Never write real client, distributor,
+  brand or stakeholder names into any tracked file**, commit message, branch name or PR.
+  This includes file paths, sheet names and column names typed in notebooks: select files with
+  a pattern and sheets/columns by position (see `data/README.md`).
+- Never commit anything from `data/` or `private/` (except READMEs and `.gitkeep`).
 - Never upload data files to websites, APIs or any external service.
+- Automatic checks enforce these rules: Git hooks in `.githooks/`, the GitHub check
+  `confidentiality-guard`, and a protected `main`. **Never bypass them**: no `--no-verify`, no
+  editing `tools/guard.py`, `tools/blocked_terms.sha256` or the hooks to silence a block. If a check
+  blocks, explain the reason to the user in plain words and fix the content.
 
 ## Exploring client data (keep exposure minimal)
 
-- Explore through code that prints **summaries**: shape, column names, types, missing
-  counts, value counts of low-cardinality columns, date ranges, `describe()`.
-- Do not open raw files directly in the chat and do not print whole tables. If examples
-  are needed, show at most 5 rows and only the relevant columns.
+- Never open files under `data/` directly (no `cat`, `head`, editor tabs or chat attachments).
+  Read them only through Python code that prints **summaries**: shape, column names, types,
+  missing counts, value counts of low-cardinality columns, date ranges, `describe()`.
+- If examples are needed, print at most 5 rows and only the relevant columns.
 - Never print columns with personal data (contact names, e-mails, phone numbers).
-- `data/raw/` is the team's shared Google Drive: **read only**. Never create, edit,
-  rename, move or delete anything inside it.
+- `data/raw/` is the team's shared Google Drive: **read only**. Never create, edit, rename,
+  move or delete anything inside it.
+- `.xlsm` files contain macros: read them with pandas/openpyxl only, never in a way that runs macros.
 
 ## First-time setup (when the user asks to set up the project)
 
@@ -34,8 +38,10 @@ coding: see "Working with teammates new to coding" below.
    `.venv/bin/pip install -r requirements.txt` (Windows: `.venv\Scripts\pip`).
 4. Run `.venv/bin/nbstripout --install` (Windows: `.venv\Scripts\nbstripout --install`)
    so notebook outputs are removed automatically at each commit.
-5. Connect Google Drive (next section).
-6. Run `git status` and confirm no data file appears. Tell the user notebooks must use
+5. Turn on the confidentiality guard: `git config core.hooksPath .githooks`, then run
+   `python3 tools/guard.py all` (Windows: `python tools\guard.py all`). It must print "OK".
+6. Connect Google Drive (next section).
+7. Run `git status` and confirm no data file appears. Tell the user notebooks must use
    the `.venv` kernel.
 
 ## Connecting the project to Google Drive (once per computer)
@@ -73,8 +79,10 @@ into `data/raw/<code>/` and `private/`. Repeat when new files arrive.
 
 ## Working rules
 
-- Explore before cleaning; document anomalies in the notebook and in
-  `docs/open_questions.md`.
+- Order of work: exploration first; cleaning decisions are taken together at the end of
+  exploration; cleaning is then done in Excel following the team's cleaning spec
+  (`docs/decisions.md`). Do not start cleaning on your own.
+- Document anomalies in the notebook and in `docs/open_questions.md`.
 - Write derived files to `data/interim/`, `data/cleaned/` or `data/standardized/`.
 - Keep original SKUs, vintages, units and granularity; never silently convert.
 - Record business decisions in `docs/decisions.md`.

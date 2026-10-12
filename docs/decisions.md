@@ -4,6 +4,8 @@ Record decisions that affect the analysis or the way we work. Newest first.
 
 | Date | Decision | Rationale | Responsible |
 |---|---|---|---|
+| 2026-10-12 | Order of work: train teammates and explore the data first; cleaning decisions are taken together at the end of exploration; cleaning is then done in Excel following the team's cleaning spec. | Understand the data before changing it; Excel is the tool the whole team shares. | Alexandre |
+| 2026-10-12 | Confidentiality guardrails enforced automatically (Git hooks, GitHub check, protected `main`, AI read restrictions) and acknowledged by each member in `DATA_POLICY.md`. | Make accidental disclosure impossible and acknowledgement indisputable, without slowing the team down. | Alexandre |
 | 2026-10-09 | Raw data is read directly from the team's LionMail Google Drive through Google Drive for desktop; each `data/raw/<code>` is a local link to the matching Drive folder. Notebook outputs are stripped automatically with nbstripout. | One master copy, no manual copies to keep in sync, data never touches GitHub; protects teammates new to Git from committing data by mistake. | Alexandre |
 | 2026-10-09 | Client, distributors and stakeholders are anonymized in the repository; the name key is kept in git-ignored `private/KEY.md`. | The NDA treats client and customer information as confidential and the client's written consent for GitHub storage has not been obtained. | Alexandre |
 | 2026-10-09 | No client data is committed; `data/` is git-ignored except READMEs and placeholders. | Confidentiality (NDA). | Alexandre |

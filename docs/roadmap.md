@@ -22,11 +22,14 @@ No deadlines are set here; add them when agreed with the client.
 ## Phase 2: Exploratory data analysis
 - **Goal:** understand structure, distributions, missing values, duplicates and anomalies per distributor.
 - **Deliverables:** one EDA notebook per distributor and one for Master Data.
+- **Also:** training of teammates new to data work.
 - **Depends on:** Phase 1.
-- **Done when:** each table has been profiled with the shared notebook structure and anomalies are documented.
+- **Done when:** each table has been profiled with the shared notebook structure, anomalies are
+  documented, and the team has agreed the cleaning decisions (logged in `decisions.md`).
 
 ## Phase 3: Data quality and cleaning
 - **Goal:** apply justified, reproducible cleaning rules while keeping raw files untouched.
+- **How:** in Excel, following the team's cleaning spec (column list, flags, control totals).
 - **Deliverables:** cleaning rules documented per table; cleaned files in `data/cleaned/`.
 - **Depends on:** Phase 2; client answers on ambiguous fields.
 - **Done when:** every rule is written down with its reason, and raw vs cleaned totals reconcile.

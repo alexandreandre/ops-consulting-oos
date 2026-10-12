@@ -15,6 +15,7 @@ folder, and each `data/raw/<code>` is a **link** to the matching Drive folder (s
 | `raw/distributor_a` … `raw/distributor_d` | Link to that distributor's Drive folder | **Read-only.** Never edit, rename, move or delete: it changes the Drive for the whole team. |
 | `raw/master_data` | Link to the Master Data Drive folder | Read-only |
 | `raw/planning` | Link to the client planning files (sourcing matrix, forecast snapshots, parameters) | Read-only |
+| *(Drive only)* `Working files` | Excel working files (cleaning) | Not linked to the repo; never save over raw files |
 | `interim/` | Local intermediate outputs | Disposable, reproducible |
 | `cleaned/` | Local cleaned tables | Produced by documented rules only |
 | `standardized/` | Common cross-distributor representation | Only after source differences are understood |
