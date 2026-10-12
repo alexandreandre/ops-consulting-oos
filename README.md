@@ -5,8 +5,8 @@ for an operations consulting engagement with a wines & spirits client.
 
 > **Confidentiality.** The client and its distributors are anonymized in this repository
 > ("the client", "Distributor A–D"). The name key lives in `private/KEY.md`, which is
-> git-ignored and shared only through the team's private channel. No client data is
-> ever committed. See [Confidentiality](#confidentiality).
+> git-ignored and kept in the team's Drive folder. No client data is ever committed.
+> Rules and automatic checks: **[DATA_POLICY.md](DATA_POLICY.md)**.
 
 ## The business problem
 
@@ -24,9 +24,10 @@ simply adding inventory.
 
 ## Current phase
 
-**Phase 1–2: data inventory, business understanding and exploration.** Initial distributor
-datasets and supporting documentation have been received; more may follow. No analysis
-results exist yet.
+**Phase 1–2: data inventory, business understanding and exploration.** The client's files
+(four distributor fill-rate files, master data, planning files) have been received and inventoried.
+Next: train teammates and explore the data; cleaning decisions are taken together at the end of
+exploration, then cleaning is done in Excel. No analysis results exist yet.
 
 Cleaning is a means, not the goal: the end product is a diagnosis of OOS drivers and
 recommendations. See [docs/roadmap.md](docs/roadmap.md).
@@ -44,7 +45,7 @@ This allocation may evolve. Everyone follows the same methodology so results sta
 ## Workflow
 
 ```
-raw data ──► explore (one notebook per distributor) ──► documented cleaning
+raw data ──► explore (one notebook per distributor) ──► team decisions ──► cleaning in Excel
         ──► standardization across distributors ──► OOS diagnosis ──► DDMRP analysis ──► recommendations
 ```
 
@@ -67,7 +68,9 @@ raw data ──► explore (one notebook per distributor) ──► documented c
 | `src/` | Reusable code, once patterns repeat |
 | `reports/` | Generated outputs (git-ignored) |
 | `tests/` | Validation checks on transformations |
+| `DATA_POLICY.md` | Confidentiality rules, automatic checks, end-of-project checklist, signatures |
 | `AGENTS.md` | Rules for AI coding assistants |
+| `tools/guard.py`, `.githooks/` | Confidentiality guard used by Git hooks and the GitHub check |
 | `private/` | Local-only files such as the name key (git-ignored) |
 | `requirements.txt` | Python packages for notebooks |
 
@@ -75,19 +78,11 @@ raw data ──► explore (one notebook per distributor) ──► documented c
 
 Follow **[docs/onboarding.md](docs/onboarding.md)**: step-by-step setup with Cursor + Codex,
 written for teammates who have never coded. In short: install Google Drive for desktop (LionMail account), add the team folder to My Drive, then ask
-Codex to set up the project (Python environment, link to the Drive data, automatic notebook-output
-stripping).
+Codex to set up the project (Python environment, confidentiality guard, link to the Drive data,
+automatic notebook-output stripping). Your first pull request is signing `DATA_POLICY.md`.
 
 ## Confidentiality
 
-All team members signed an NDA with the client. In practice:
-
-- **Never commit** data files, client slides, emails, NDA documents, passwords or keys. `.gitignore`
-  blocks common formats, but check `git status` before every commit.
-- **Never write real client, distributor or stakeholder names** in tracked files, commit messages,
-  branch names or pull requests. Use the codes.
-- Do not upload client data to external tools (including AI assistants) beyond what the team has
-  agreed is allowed.
-- Clear notebook outputs before committing.
-- At the end of the engagement, the NDA requires deleting all project files: this includes the
-  GitHub repository and every local clone.
+All team members signed an NDA with the client. **[DATA_POLICY.md](DATA_POLICY.md)** turns it into
+eight rules, lists what is enforced automatically (Git hooks, GitHub check, protected `main`, AI
+read restrictions) and holds each member's signed acknowledgement. Read it before your first commit.

@@ -31,3 +31,15 @@ See `notebooks/README.md`. Same sections, same order, for every distributor.
 Shape and grain · column types · missing values (and what missing means) · zeros vs missing ·
 duplicates (exact and on business keys) · date range and gaps · units · outliers and negative values ·
 key consistency with other tables and Master Data.
+
+## Tools
+
+| Stage | Tool | Why |
+|---|---|---|
+| Exploration | Notebooks run with Codex (summaries only), Excel to look at a few rows | Fast profiling of large files; hands-on view for everyone |
+| Cleaning | Excel, following the team's cleaning spec (owner: Lisa) | Common tool for the whole team; rules agreed together |
+| Checks | Control totals in Excel; optional Python re-check | Reconciliation must be exact |
+
+Raw files are never edited: Excel working files are saved in the `Working files` folder of the team
+Drive, never over the raw files.
+

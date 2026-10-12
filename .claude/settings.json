@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./data/raw/**)",
+      "Read(./data/interim/**)",
+      "Read(./data/cleaned/**)",
+      "Read(./data/standardized/**)"
+    ]
+  }
+}

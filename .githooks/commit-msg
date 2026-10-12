@@ -1,0 +1,4 @@
+#!/bin/sh
+# Confidentiality guard on commit messages (see DATA_POLICY.md). Never bypass with --no-verify.
+. "$(git rev-parse --show-toplevel)/.githooks/_python.sh"
+exec "$PY" tools/guard.py message "$1"

@@ -2,11 +2,13 @@
 
 ## Rules
 
-- `main` is the stable reference. No direct commits to `main`.
+- `main` is the stable reference and is protected: changes only through a pull request with the
+  `confidentiality-guard` check passing.
 - One **branch** per meaningful contribution, named `<name>/<topic>`, e.g. `sying/eda-distributor-c`.
 - Open a **pull request (PR)** to merge into `main`; at least one teammate reviews it.
 - Clear, short **commit messages** in the imperative: `Add EDA sections for Distributor C orders`.
-- **No client data, ever**: check `git status` before each commit. Clear notebook outputs.
+- **No client data, ever**: check `git status` before each commit. The guard blocks data files,
+  notebook outputs and real names automatically; never bypass it with `--no-verify`.
 - **No real client, distributor or stakeholder names** in files, commits, branches or PRs.
 - Record assumptions in `open_questions.md` and decisions in `decisions.md`.
 

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Confidentiality guard before each commit (see DATA_POLICY.md). Never bypass with --no-verify.
+. "$(git rev-parse --show-toplevel)/.githooks/_python.sh"
+exec "$PY" tools/guard.py staged
