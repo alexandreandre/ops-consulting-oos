@@ -23,3 +23,5 @@ the bottom with the answer and source.
 | # | Question | Raised by | Date | Status |
 |---|---|---|---|---|
 | 1 | Where is the team's approved storage for raw data and final deliverables? | Alexandre | 2026-10-09 | Open |
+| 2 | Distributor C's file is dated 2026-10-12, later than the 09-30 files used for the first-pass control totals. Which version is the reference, and do the control totals need updating? | Alexandre | 2026-10-12 | Open |
+| 3 | The fill-rate files were first named `2026.08 …`: do they stop at August 2026, and what period do they start from? | Alexandre | 2026-10-12 | Open |
