@@ -40,20 +40,23 @@ coding: see "Working with teammates new to coding" below.
 
 ## Connecting the project to Google Drive (once per computer)
 
-1. Check `private/KEY.md` exists. If not, ask the user to download it from the team's
-   Drive folder into `private/`.
-2. Check Google Drive for desktop is running and signed in with the user's Columbia
+1. Check Google Drive for desktop is running and signed in with the user's Columbia
    (LionMail) account. Mac: `~/Library/CloudStorage/GoogleDrive-<email>/`. Windows: a
    drive letter, usually `G:\`. If missing, tell the user to install it from
    https://www.google.com/drive/download/ , sign in, and wait.
-3. Find the team folder under `My Drive`. If it is missing, the user must add a shortcut
-   on the web: Shared with me → right-click the folder → Organize → Add shortcut → My Drive.
-4. For each code in `KEY.md`, locate its Drive folder and create the link
-   `data/raw/<code>` (remove the empty folder first if one exists):
+2. Find the team folder: the folder under `My Drive` (`Mon Drive` in French) that contains
+   `KEY.md`. If there is none, the user must add a shortcut on drive.google.com:
+   Shared with me → right-click the folder → Organize → Add shortcut → My Drive.
+3. If `private/KEY.md` is missing, copy it from the team folder.
+4. For each code in `KEY.md`, create the link `data/raw/<code>` to its Drive folder:
    - Mac: `ln -s "<drive folder path>" data/raw/<code>`
    - Windows: `mklink /D data\raw\<code> "<drive folder path>"` (needs Developer Mode)
 5. List the files visible through each link (names only) and run `git status`: the links
    must not appear.
+
+**Fallback** if Google Drive for desktop cannot be used or links fail: ask the user to
+download the distributor folders from drive.google.com, then copy the files (and `KEY.md`)
+into `data/raw/<code>/` and `private/`. Repeat when new files arrive.
 
 ## Working with teammates new to coding
 
