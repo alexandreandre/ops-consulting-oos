@@ -24,7 +24,6 @@ is downloaded or copied by hand, and new files appear automatically.
    your **Columbia (LionMail)** account.
 2. In Google Drive on the web, go to **Shared with me**, right-click the project folder →
    **Organize → Add shortcut → My Drive**. (Drive for desktop only shows what is in My Drive.)
-3. Download `KEY.md` from that folder and put it in the project's `private/` folder.
 
 ## 4. First message to Codex (setup, once)
 

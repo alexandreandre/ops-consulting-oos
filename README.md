@@ -74,7 +74,7 @@ raw data ──► explore (one notebook per distributor) ──► documented c
 ## Getting started
 
 Follow **[docs/onboarding.md](docs/onboarding.md)**: step-by-step setup with Cursor + Codex,
-written for teammates who have never coded. In short: install Google Drive for desktop (LionMail account), put `KEY.md` in `private/`, then ask
+written for teammates who have never coded. In short: install Google Drive for desktop (LionMail account), add the team folder to My Drive, then ask
 Codex to set up the project (Python environment, link to the Drive data, automatic notebook-output
 stripping).
 
