@@ -59,8 +59,9 @@ of work will be shared.
 
 **Start a piece of work**
 > I want to start exploring Distributor C. Create a new branch for this, then create the
-> exploration notebook following notebooks/README.md. Go one table at a time and explain
-> what you find in plain English.
+> exploration notebook following notebooks/README.md. Go one sheet at a time and explain
+> what you find in plain English. Read docs/eda_guide.md first so the notes match what
+> the team means by exploration.
 
 **Note something unclear**
 > Add this question to docs/open_questions.md: …

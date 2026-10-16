@@ -21,7 +21,7 @@ No deadlines are set here; add them when agreed with the client.
 
 ## Phase 2: Exploratory data analysis
 - **Goal:** understand structure, distributions, missing values, duplicates and anomalies per distributor.
-- **Deliverables:** one EDA notebook per distributor and one for Master Data.
+- **Deliverables:** one EDA notebook per distributor, one for Master Data, and one for Planning. What this phase is: `eda_guide.md`.
 - **Also:** training of teammates new to data work.
 - **Depends on:** Phase 1.
 - **Done when:** each table has been profiled with the shared notebook structure, anomalies are
