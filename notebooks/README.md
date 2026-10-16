@@ -1,7 +1,8 @@
 # notebooks/
 
 One exploratory notebook **per distributor**, with one section per table (see
-`docs/methodology.md` for why).
+`docs/methodology.md` for why). For what exploration is and what to look for, see
+`docs/eda_guide.md`.
 
 Naming: `NN_<stage>_<scope>.ipynb`, e.g. `01_eda_distributor_a.ipynb`,
 `01_eda_master_data.ipynb`, `02_cleaning_distributor_a.ipynb`.

@@ -59,6 +59,7 @@ raw data ──► explore (one notebook per distributor) ──► team decisio
 | `docs/data_dictionary.md` | Inventory of datasets (filled as we learn) |
 | `docs/glossary.md` | Supply-chain and DDMRP terms in plain language |
 | `docs/methodology.md` | How we explore, clean and standardize data |
+| `docs/eda_guide.md` | What exploratory analysis is, in short |
 | `docs/team_workflow.md` | Git/GitHub workflow, incl. a beginner guide |
 | `docs/open_questions.md` | Questions for the client or the team |
 | `docs/decisions.md` | Decision log |

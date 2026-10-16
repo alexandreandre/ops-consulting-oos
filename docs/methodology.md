@@ -25,6 +25,7 @@
 ## Shared notebook structure
 
 See `notebooks/README.md`. Same sections, same order, for every distributor.
+What exploration is, in plain language, is in `eda_guide.md`.
 
 ## Standard checks per table
 
