@@ -73,6 +73,11 @@ of work will be shared.
 **Get the team's latest changes**
 > Switch to main and get the latest version from GitHub.
 
+You rarely need these prompts. The assistant does the git steps itself: at the start of a
+session it pulls your branch, so you see what teammates pushed. When a step reads on its own,
+it commits, pushes, and gives you the pull request link. Several people can work on the same
+branch. `main` changes only through a pull request with the guard green; no review is needed.
+
 ## 7. Rules to remember
 
 - Data never goes on GitHub, and you write codes, not real names. The guard blocks mistakes:
