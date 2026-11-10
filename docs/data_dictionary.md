@@ -12,7 +12,7 @@ names. "?" = not yet known.
 | Distributor C | Sying | `data/raw/distributor_c/` | Files received, not yet documented |
 | Distributor D | Sying | `data/raw/distributor_d/` | Files received, not yet documented |
 | Master Data | Lisa | `data/raw/master_data/` | Used for the Distributor B join, 2026-10-23. Not fully documented |
-| Planning | Team | `data/raw/planning/` | Snapshot extract checked 2026-11-04. It has no rows for Distributor B. Not fully documented |
+| Planning | Team | `data/raw/planning/` | Snapshot extract checked 2026-11-04. It has no rows for Distributor B. Rechecked 2026-11-10: exactly 500,000 data rows, snapshots taken 2024-08-20 to 2024-12-19 only, forecast months 2024-08 to 2026-10. Possibly cut at a row limit. Not fully documented |
 
 ## Files received (client file share, inventory of 2026-10-12)
 
