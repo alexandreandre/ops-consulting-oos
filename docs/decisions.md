@@ -5,6 +5,16 @@ Record decisions that affect the analysis or the way we work. Newest first.
 | Date | Decision | Rationale | Responsible |
 |---|---|---|---|
 | 2026-11-10 | Git workflow: `main` is the stable version and changes only through a pull request whose guard check is green; no human review is required to merge. Speed between teammates goes through one shared branch per topic: everyone on the topic pulls it at the start and pushes each readable step, and teammates may push to each other's branches. The assistant does the git steps itself: fetch and pull at the start; at each readable step, `git status`, commit without data or real names, push; one pull request per branch, updated by later pushes; merge when the step is coherent and the guard is green. One commit per readable step. A conflict on pull stops the work and is explained; no force push. | GitHub requires the guard check and zero reviews; the old "a teammate reviews" rule slowed the team without protecting the data. Work left on one laptop is invisible to the others. | Alexandre |
+| 2026-11-04 | Distributor B's current output is `data/cleaned/distributor_b_v1.xlsx`, rebuilt from the raw extract on the frozen team template. One clean row is one raw row. The 14 duplicate item-month keys stay, flagged, and are not summed. Location is the sales org, and the two sales orgs are not added together. The four questions use naked goods and gift box only, with a client SAP SKU and a 9L factor. Supply-constrained ids, limited edition and VAP are out of that cut. The OOS measure is cases OOS. December and January count half a month. Repeat is 4 or more weighted OOS months. The Pareto is location × client SAP SKU on weighted OOS 9L, including the row that crosses 80%. A vintage flag compares client SKUs only when they share a planning SKU, a bottle size and a display type. Forecast columns are blank. The snapshot file in the team folder has no rows for this distributor, and the 2026 easier extract is not in that folder. A missing extract is not filled with zero. Buffer columns are blank. The October workbook stays as the earlier cut. | The team lead confirmed the location × client SKU grain on 2026-11-04, and limited a planning-SKU grouping to vintages of the same size and pack. The October file ranked a distributor item in one market on unshipped cases. | Alexandre |
+| 2026-10-23 | Distributor A's blank Cases Unshipped is not imputed. The ask to the client uses 1,032 rows where shipped is at least 0.05 case below ordered (gap 7,644 cases). All of them are scored at 100% fill. | The deck's formula treats a blank as zero and matches the quoted fill rate, but 943 of these rows were fully confirmed and still shipped short. Three smaller gaps (under 0.05 case) and 76 rows with shipped blank as well stay out of that count. | Lisa will take it to the client; Alexandre counted |
+| 2026-10-23 | Quantities stay in physical cases. A 9L conversion factor is its own column. 9L is for financial reporting and for comparing lost cases across pack sizes. | Confirmed on the client calls: replenishment runs on physical cases. | Lisa |
+| 2026-10-23 | The team fill rate is case-weighted: 1 − unshipped / ordered, summed over cases. The average of the fill-rate column over rows is a secondary view only. | It matches the introduction deck and the figure the client quotes. | Lisa |
+| 2026-10-23 | Do not key on the product name. Within a file, the id in column G is the grain. Across distributors, the key is the client SAP SKU from Master Data, and inactive or remapped codes are flagged, not dropped in silence. | Names change and repeat. The client also flagged old versus active SKUs as a cause of missed replenishment. | Lisa |
+| 2026-10-23 | The unit of analysis is the SKU × market cell, not the state and not the distributor total. Market is not the same thing as state. | Buffers are set per SKU and location. For Distributor A the file is already close to that (one state, one warehouse). For Distributor C, some markets have two warehouses. | Lisa |
+| 2026-10-23 | Three supply-constrained SKUs (called RTS on the client calls) stay in the data with a flag and are left out of the main cut for now. The main cut must still be able to show the total with them included. | The client asked for that split. The short codes are not stored in this repository. | Lisa |
+| 2026-10-23 | The worked Distributor C file received on 2026-10-23 is a format reference only. Do not copy its SKU × state grain or its January–August 2026 cut. | Lisa: the granularity in that file was not updated. The agreed grain is SKU × market, and Distributors A and B have about two years of months. | Lisa |
+| 2026-10-23 | Distributor B's column G is the distributor item code. It joins to column D of the first Master Data sheet. The client SAP SKU is column N of that sheet, carried only when the match is one-to-one. The 9L factor is column Y of the same sheet. | 371 of 391 ids match column D. None match column N directly. One matched id points at two client SAP SKUs (flagged, SAP left blank). 20 ids are not on column D. | Alexandre |
+| 2026-10-23 | Distributor B's clean file keeps one row per sales org × source id × month and sums the 14 duplicate keys. It does not add the two sales orgs together. A separate view does, because the location list maps both orgs to one market. | Raw totals have to reconcile. A shared warehouse is still unconfirmed, so the sum is a view, not the cleaned grain. | Alexandre |
 | 2026-10-12 | Order of work: train teammates and explore the data first; cleaning decisions are taken together at the end of exploration; cleaning is then done in Excel following the team's cleaning spec. | Understand the data before changing it; Excel is the tool the whole team shares. | Alexandre |
 | 2026-10-12 | Confidentiality guardrails enforced automatically (Git hooks, GitHub check, protected `main`, AI read restrictions) and acknowledged by each member in `DATA_POLICY.md`. | Make accidental disclosure impossible and acknowledgement indisputable, without slowing the team down. | Alexandre |
 | 2026-10-09 | Raw data is read directly from the team's LionMail Google Drive through Google Drive for desktop; each `data/raw/<code>` is a local link to the matching Drive folder. Notebook outputs are stripped automatically with nbstripout. | One master copy, no manual copies to keep in sync, data never touches GitHub; protects teammates new to Git from committing data by mistake. | Alexandre |
@@ -15,3 +25,44 @@ Record decisions that affect the analysis or the way we work. Newest first.
 Template:
 
 | YYYY-MM-DD | What was decided | Why, and alternatives considered | Who |
+
+## Cleaning spec (2026-10-23)
+
+Applies to the Excel working files. Raw files stay untouched. Distributor B's first file is in `data/cleaned/` locally and in the team Drive `Working files` folder. It is not committed.
+
+**Layout to follow**, taken from the Distributor C worked file and adjusted where that file is already out of date:
+
+1. Notes, with raw versus clean totals as formulas.
+2. Clean table, one row per sales org × source id × month, until a market sum is explicitly a view.
+3. Flag column and a count of each flag.
+4. Lineage back to the raw row numbers, and a sheet of the source rows that were merged.
+5. Exceptions for joins that are missing or ambiguous. Do not guess a code.
+6. The raw extract, so the totals can be checked without opening the Drive original.
+7. Analysis views only after the columns they need exist. Pareto of lost cases uses unshipped × 9L factor. A repeat-offender matrix needs a month. Root-cause tags need forecasts, lead times, and active or inactive status. Those tags are still not in the Distributor B file.
+
+**Rules already used on Distributor B**
+
+- Duplicate sales org × source id × month: sum the quantities, keep both source rows, flag the clean row.
+- Fill rate on the clean row: `1 − unshipped / ordered`. Flag the row when that differs from the case-weighted source fill rate by more than half a point.
+- Flag the row when ordered and shipped + unshipped differ by more than 0.01 case.
+- 9L columns are formulas. The factor is an input from Master Data. Physical cases are not overwritten.
+- RTS rows stay in the table. `Scope` marks them so a view can exclude them.
+- Deletion flags copied from Master Data do not drop rows. What those flags mean is still open.
+
+**Added 2026-10-26 on Distributor B**
+
+- Pareto of source id × market, full history, unshipped 9L. A second Pareto keeps naked goods and gift box only.
+- Repeat matrix. Frequent is a parameter (4 months at build). A 6-month column sits beside it.
+- Seasonality by month, with RTS included and excluded.
+- The front sheet is `Analysis`. `Month_Id` is the working table the formulas read. Quadrant labels are readings, not causes.
+
+**Added 2026-11-04 on Distributor B**
+
+- `tools/build_distributor_b_v1.py` rebuilds `data/cleaned/distributor_b_v1.xlsx` from the raw extract and Master Data. Raw files stay untouched.
+- Clean keeps every raw row. Duplicate item-month keys are flagged and not summed.
+- Scope, the weighted month, the Pareto, the action list and the spike list follow the frozen template. Quadrant and action labels are readings, not root causes.
+
+**Not started**
+
+- Distributor A, until the client answers the blank-unshipped question.
+- The forecast join for Distributor B. The local snapshot extract has no rows for this distributor. Root-cause tags stay off until that join exists. The single-brand pilot was a demo on 2026-10-30. The brand is not named in this repository.
