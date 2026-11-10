@@ -3,6 +3,24 @@
 Read `README.md` and `DATA_POLICY.md` first, then the relevant file in `docs/`. Some teammates
 are new to coding: see "Working with teammates new to coding" below.
 
+## Git with the team (do this every session, without being asked)
+
+- `main` is the stable version. It changes only through a pull request whose
+  `confidentiality-guard` check is green. Nobody waits for a human review to merge.
+- Speed between teammates goes through shared branches, not `main`. One branch per topic.
+  Everyone working on that topic pulls it at the start and pushes it when a step reads well.
+  Teammates may push to each other's branches (Lena can push to Alexandre's).
+- **Start of a session:** `git fetch`, then pull the working branch. Read new commits before
+  editing the same files. A new branch starts from an up-to-date `main`.
+- **A step reads on its own** (a notebook section, a decision, a script, a doc):
+  `git status`, commit only project files (nothing from `data/` or `private/`, no real name),
+  push the branch. Open the pull request once; later pushes update it. Give the user the link
+  and the files sent.
+- **One commit per readable step.** Not every keystroke, not the whole distributor at the end.
+- **Merge into `main`** only when the step is coherent and the guard is green.
+- **Conflict on pull:** stop and explain it in plain words. Never `git push --force`,
+  `git reset --hard` or `--no-verify`. Beginner wording is in `docs/team_workflow.md`.
+
 ## Confidentiality rules (non-negotiable, see DATA_POLICY.md)
 
 - The client and its distributors are **anonymized** in every tracked file:
