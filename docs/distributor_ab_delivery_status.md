@@ -15,6 +15,7 @@ This is a handover for the team, not a client-ready diagnosis.
 - The 2026-11-04 analysis in `roadmap.md` reports 53 location × client SKU cells covering 80% of weighted in-scope OOS 9L. This is a descriptive result; forecast bias and causes remain unverified.
 - Recalculation from the shared Clean sheet reproduces 415 cells with OOS and 53 cells covering 80.27% of the weighted in-scope OOS 9L. All December and January rows have weight 0.5; all other months have weight 1. This verifies the calculation conditional on the workbook's scope, SKU mappings and conversion factors; it does not independently validate those inputs.
 - Scope status covers 6,526 included, 797 excluded and 239 review rows. Their OOS quantities are respectively 15,327.47, 5,896.17 and 177.67 physical cases. These counts describe the workbook's classification, not a decision to discard any row.
+- The Action_List and Top_Cells sheets each contain the same 415 unique location × client SKU keys. Every action row has a suggested action and rationale, but all 415 bias fields say `incomplete`; none contains a numeric bias. Current and recommended buffer fields are empty. These action labels require business validation before delivery as recommendations.
 - The three supply-constrained item matches and the 14 repeated source keys remain questions for the team or client; see `open_questions.md` questions 13 and 16.
 
 ## Distributor A
