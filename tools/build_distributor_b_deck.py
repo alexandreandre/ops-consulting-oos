@@ -266,9 +266,9 @@ def build(f: dict, lab: dict) -> Presentation:
          [f"First read of the fill-rate data, {period}",
           f"{lab['meeting']} · draft for discussion"], size=20, color=BLUSH)
     notes(s,
-          "Today we show the first read of the Upstate data: where the stockouts are, which products, "
+          f"Today we show the first read of the {lab['distributor']} data: where the stockouts are, which products, "
           "whether they repeat, and when. The forecast part is not done yet; we'll say what we need for it.",
-          "On présente la première lecture des données Upstate : où sont les ruptures, quels produits, "
+          f"On présente la première lecture des données {lab['distributor']} : où sont les ruptures, quels produits, "
           "est-ce que ça se répète, et quand. La partie prévisions n'est pas faite : on dit ce qu'il nous manque.")
 
     # 2. Key messages
