@@ -93,15 +93,15 @@ What it says: in-scope OOS rate 4.3% (9L); 53 of 415 loss cells carry 80% of wei
 - **Code review.** An independent read of `tools/build_distributor_b_v1.py` against template v1.1 raised 13 points. The bugs are fixed and logged in `decisions.md`; the rebuilt workbook has the same totals, the same 53 Pareto cells and the same patterns. The open method points are listed there for the team.
 - **New context (notebook B, part 7).** About 70% of the weighted loss is on items the distributor lists as "Allocated - Supplier" and 20% on "Discontinued" items (client question 17). The 53 Pareto cells all come from one source, shared by both locations. 42 of them have buffer settings, all at the default variability factor, none overridden; repeat and one-off cells have the same settings. The two locations have their own location codes and parameters.
 - **Unmapped codes.** The SCC bridge proposes a client SKU for 11 of the 20 codes, after reproducing all 370 existing mappings. Proposals for Lisa: `tools/propose_distributor_b_mappings.py` writes `data/interim/distributor_b_mapping_proposals.xlsx` (copy in `Working files`). Not applied.
-- **Client deck.** Now 12 slides: a supply-context slide and updated questions (unmapped codes with proposals, supplier allocation). Rebuilt workbook, deck and proposals are in `Working files`.
+- **Client deck.** Now 12 slides: a supply-context slide and updated questions (unmapped codes with proposals, supplier allocation). Rebuilt workbook and proposals are in `Working files`; the deck stays on Alexandre's computer.
 
 ## Team meeting, 2026-11-10
 
-Notes: `docs/meetings/2026-11-10_team_meeting.md`. For B:
+Notes kept locally by Alexandre, shared within the team directly. For B:
 
 - Alexandre and Lena own B; Yinqi owns A. A's cleaning in this branch stops at the notebook checks; A's owner takes it from there.
 - The three recently launched SKUs the A owner wants excluded are B's three `RTS` ids, already excluded. The workbook and the client deck do not change.
 - Each owner brings a short analysis to the 2026-11-12 call: for B, the 12-slide deck.
 - Data questions go to the client by email the day after the meeting. B's open questions (17, 13, 12) can go out on 2026-11-11.
 
-- After the meeting (same evening): notebook B part 8 and a new deck slide (now 13 slides). Each spike is narrow: three products make 65% to 87% of it. One client SKU, a 750 ml gift box, is in 7 of the 8 spikes, ranks 1 and 2 in the Pareto, and carries about 22% of the weighted loss for about 4% of the volume; its item status is "Allocated - Supplier". No spike comes back in the same calendar month a year later: no seasonality to report. Deck copied to `Working files`.
+- After the meeting (same evening): notebook B part 8 and a new deck slide (now 13 slides). Each spike is narrow: three products make 65% to 87% of it. One client SKU, a 750 ml gift box, is in 7 of the 8 spikes, ranks 1 and 2 in the Pareto, and carries about 22% of the weighted loss for about 4% of the volume; its item status is "Allocated - Supplier". No spike comes back in the same calendar month a year later: no seasonality to report. The deck stays on Alexandre's computer (`reports/`, not shared on the Drive).
