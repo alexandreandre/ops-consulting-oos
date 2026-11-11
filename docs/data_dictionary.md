@@ -143,3 +143,17 @@ Clean has one row per raw row and the template columns A–AL. The 14 duplicate 
 | Removed_Dups | Empty on purpose |
 
 In-scope means naked goods or gift box, a one-to-one client SAP SKU, a 9L factor, and not a supply-constrained id, limited edition or VAP. On that cut, ordered 9L is 250,819.3 and OOS 9L is 10,699.074, an OOS rate of 4.3%. (Corrected 2026-11-10: the earlier 243,789.668 and 4.4% counted only the 415 cells with a stockout.) 602 location × client SKU cells. 415 have any OOS 9L. 53 of them carry 80.3% of weighted OOS 9L. Repeat cells carry 56.7% of that weighted loss. The repeat-and-large quadrant is 28 cells and 50.0%. Both sales orgs pass the 10,000 ordered-9L cut. Eight location-months spike, and five are marked as the shortlist.
+
+## Reference sheets used for Distributor B (2026-11-10)
+
+Read by position; sheet and column names are not typed in code.
+
+| File | Sheet (position) | Used for |
+|---|---|---|
+| Master Data | 1 | Client SKU (col N), SCC (col G), 9L factor (col Y), joined on col D |
+| Master Data | 2: the distributor's item list (title row, headers on row 3) | All 391 item codes, SCC, purchasing status, sales status |
+| Master Data | 4: location mapping | The two locations have their own location code and ship-to, one market |
+| Parameter file | 1: factors | Variability factor, lead-time factor, MOQ per distributor location × SKU (the SKU code ends the SKU text) |
+| Parameter file | 2: lead times | Processing time and order cycle per source × distributor location |
+| Sourcing matrix | 1 | Source of each SKU at each distributor location, by month of 2026 |
+
