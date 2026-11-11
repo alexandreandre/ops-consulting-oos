@@ -87,8 +87,16 @@ def month_start(value) -> pd.Timestamp:
     return pd.Timestamp(year=int(digits[:4]), month=int(digits[4:6]), day=1)
 
 
+def one_file(folder: Path, pattern: str) -> Path:
+    """The single source file in a folder. Excel lock files (~$...) are ignored."""
+    found = sorted(p for p in folder.glob(pattern) if not p.name.startswith("~$"))
+    if len(found) != 1:
+        raise SystemExit(f"expected one {pattern} file in {folder.name}, found {len(found)}")
+    return found[0]
+
+
 def load_fill() -> pd.DataFrame:
-    path = next((RAW / "distributor_b").glob("*.xlsx"))
+    path = one_file(RAW / "distributor_b", "*.xlsx")
     frame = pd.read_excel(path, header=0)
     expected = {
         0: "Yearmonth",
@@ -117,6 +125,9 @@ def load_fill() -> pd.DataFrame:
         "fill_reported": pd.to_numeric(frame.iloc[:, 13], errors="coerce"),
     })
     out["location"] = out["sales_org"].str.split().str[-1]
+    # Template v1.1: this distributor's market is the shipping location, two of them.
+    if out["location"].nunique() != 2 or out["location"].isin(["nan", ""]).any():
+        raise SystemExit("expected two shipping locations")
     if out["dist_item"].isna().any():
         raise SystemExit("a fill-rate row has no item code")
     if not set(RTS_IDS).issubset(set(out["dist_item"])):
@@ -125,7 +136,7 @@ def load_fill() -> pd.DataFrame:
 
 
 def load_master(item_ids: pd.Series) -> pd.DataFrame:
-    path = next((RAW / "master_data").glob("*.xlsm"))
+    path = one_file(RAW / "master_data", "*.xlsm")
     wide = pd.read_excel(path, sheet_name=0)
     overlaps = {}
     for index in range(5):
@@ -147,7 +158,7 @@ def load_master(item_ids: pd.Series) -> pd.DataFrame:
 
 
 def load_anaplan() -> pd.DataFrame:
-    path = next((RAW / "master_data").glob("*.xlsm"))
+    path = one_file(RAW / "master_data", "*.xlsm")
     frame = pd.read_excel(path, sheet_name="Anaplan SKU Hierarchy")
     if frame.columns[2] != "Code" or frame.columns[13] != "Planning SKU Code":
         raise SystemExit("Anaplan hierarchy columns moved")
@@ -179,7 +190,8 @@ def collapse_master(master: pd.DataFrame) -> pd.DataFrame:
             "psku": None,
         }
         if len(saps) != 1:
-            record["map_status"] = "AMBIGUOUS"
+            # Several client SKUs: AMBIGUOUS. None at all: the code is listed but carries no SKU.
+            record["map_status"] = "AMBIGUOUS" if len(saps) > 1 else "NOT_FOUND"
             factors = group["factor"].dropna().unique()
             if len(factors) == 1:
                 record["factor"] = float(factors[0])
@@ -302,7 +314,7 @@ def build_clean(fill: pd.DataFrame, master: pd.DataFrame, anaplan: pd.DataFrame)
 
 def scope_for(row) -> tuple[str, str]:
     if row["dist_item"] in RTS_IDS:
-        return "EXCLUDE", "QUOTA"
+        return "EXCLUDE", "RTS"
     display = row["display_norm"]
     if display == "LIMITED EDITION" or row["anaplan_limited"]:
         return "EXCLUDE", "LIMITED_EDITION"
@@ -318,20 +330,32 @@ def scope_for(row) -> tuple[str, str]:
 
 
 def mark_vintage(frame: pd.DataFrame) -> pd.DataFrame:
-    """Flag a client SKU only against later codes of the same planning SKU, size and display type."""
+    """Flag a location x client SKU when a later code of the same planning SKU, bottle size and
+    display type starts selling later at the same location. When both codes carry a vintage year,
+    the later code must also have the later year. Fixed 2026-11-10: the flag used to pool both
+    locations and ignored the vintage year."""
     sales = frame[(frame["cases_ordered"] > 0) & frame["sap"].notna() & ~frame["planning_fallback"]].copy()
     sales = sales[sales["sap"].astype(str).str.match(r"^\d+$")]
     sales["bottle_key"] = sales["bottle"].map(lambda value: "" if pd.isna(value) else str(value).strip().lower())
     sales["pack_key"] = sales["display_norm"].fillna("")
-    first = sales.groupby(["planning", "bottle_key", "pack_key", "sap"], as_index=False)["month"].min()
-    transition: set[str] = set()
-    for _, block in first.groupby(["planning", "bottle_key", "pack_key"], sort=False):
-        pairs = [(int(sap), str(sap), month) for sap, month in zip(block["sap"], block["month"])]
-        for number, sap, own_month in pairs:
-            if any(other > number and other_month > own_month for other, _sku, other_month in pairs):
-                transition.add(sap)
+    sales["year"] = pd.to_numeric(sales["vintage"], errors="coerce")
+    first = sales.groupby(["location", "planning", "bottle_key", "pack_key", "sap"], as_index=False).agg(
+        month=("month", "min"), year=("year", "first"))
+    transition: set[tuple[str, str]] = set()
+    for (location, *_rest), block in first.groupby(["location", "planning", "bottle_key", "pack_key"], sort=False):
+        rows = list(zip(block["sap"].astype(int), block["sap"].astype(str), block["month"], block["year"]))
+        for number, sap, own_month, own_year in rows:
+            for other, _other_sap, other_month, other_year in rows:
+                if other <= number or other_month <= own_month:
+                    continue
+                if pd.notna(own_year) and pd.notna(other_year) and other_year <= own_year:
+                    continue
+                transition.add((location, sap))
+                break
     frame = frame.copy()
-    frame["vintage_flag"] = frame["sap"].astype(str).isin(transition) & ~frame["planning_fallback"]
+    keys = list(zip(frame["location"], frame["sap"].astype(str)))
+    flagged = pd.Series([key in transition for key in keys], index=frame.index)
+    frame["vintage_flag"] = flagged & ~frame["planning_fallback"]
     return frame
 
 
@@ -535,7 +559,7 @@ def clean_rows(clean: pd.DataFrame) -> list[list]:
             None,
             None,
             None,
-            False,
+            None,
             record.flags,
             None if pd.isna(record.sap) else record.sap,
             record.map_status,
@@ -587,6 +611,13 @@ def write_workbook(clean: pd.DataFrame, cells: pd.DataFrame, locations: pd.DataF
 
 
 def write_notes(ws, clean, cells, locations, spikes, raw_totals) -> None:
+    # Figures below are computed on each run, so they cannot go stale after a new extract.
+    scope = clean[(clean["scope_status"] == "INCLUDE") & clean["nine_l"].gt(0) & clean["sap"].notna()]
+    by_year = scope.groupby(scope["month"].dt.year)["oos_9l"].sum()
+    year_share = ", ".join(f"{year} carries {share:.0%}" for year, share in (by_year / by_year.sum()).items())
+    dup_groups = int(clean.loc[clean["dup_flag"] != "", ["location", "month", "dist_item"]].drop_duplicates().shape[0])
+    top_skus = cells.loc[cells["top80"]].groupby("sap")["location"].nunique()
+    both_locations = int((top_skus > 1).sum())
     lines = [
         "Distributor B, template v1.1 rebuild.",
         "Rerun with python3 tools/build_distributor_b_v1.py. Raw files are not modified.",
@@ -595,11 +626,11 @@ def write_notes(ws, clean, cells, locations, spikes, raw_totals) -> None:
         "The four questions use INCLUDE rows with a client SKU and a 9L factor. That scope is naked goods and gift box. Supply-constrained ids, limited edition and VAP are EXCLUDE.",
         "OOS is Cases OOS. December and January have weight 0.5. Repeat is 4 or more weighted OOS months. Intermittent is 3 up to but not including 4. Event is under 3.",
         "Large is the Pareto set of location x client SKU whose weighted OOS 9L first reaches 80 percent, including the row that crosses the line.",
-        "A vintage flag only compares client SKUs that share a planning SKU, a bottle size and a display type.",
-        "Forecast columns are blank. The snapshot file in the team folder has no rows for this distributor, and the 2026 easier extract is not in that folder yet. A missing extract is not filled with zero.",
-        "On the in-scope cut, 2025 carries 58 percent of OOS 9L, 2026 carries 34 percent, and 2024 carries 9 percent. A 2026-only forecast join would not cover the bulk of the loss.",
-        "The 14 duplicate groups each have two descriptions that share at least half their words. Both rows stay until the team confirms a rename.",
-        "Of the client SKUs in the top 80 percent, 15 are in both sales orgs.",
+        "A vintage flag compares client SKUs that share a planning SKU, a bottle size and a display type, at the same location. When both codes carry a vintage year, the later code must have the later year.",
+        "Forecast columns are blank. The snapshot file in the team folder has no rows for this distributor. The client saved a 2026 extract on 2026-10-29 in its own shared folder; it is not in the team folder yet. 2025 snapshots are still with the client's IT. A missing extract is not filled with zero.",
+        f"On the in-scope cut, OOS 9L by year: {year_share}. A 2026-only forecast join would not cover the 2025 loss.",
+        f"{dup_groups} duplicate item-month groups carry two product descriptions. Template v1.1 keeps both rows, not summed, for this distributor.",
+        f"Of the client SKUs in the top 80 percent, {both_locations} are in the top 80 percent at both locations.",
         "Current buffer and recommended buffer are blank. The parameter file has no buffer column.",
         f"Raw ordered {raw_totals['ordered']:.3f}, unshipped {raw_totals['unshipped']:.3f}, OOS {raw_totals['oos']:.3f}. Clean matches these totals. Removed_Dups is empty.",
         f"Action rows: {int((cells['weighted_oos_9l'] > 1e-9).sum())}. Spike months: {len(spikes)}. Locations at or above {SEVERITY_MIN_ORDERED_9L:,.0f} ordered 9L: {int(locations['in_table'].sum())} of {len(locations)}.",
