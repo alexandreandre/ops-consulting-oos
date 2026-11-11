@@ -81,3 +81,10 @@ When a new fill-rate extract, Master Data or forecast extract arrives:
 2. Rerun `tools/build_distributor_b_v1.py`. It stops if a source column moved.
 3. Rerun the B notebook. Section 28 asserts the published totals; a failed assert means the totals moved and must be explained before delivery.
 4. For a forecast extract: check snapshot dates, forecast months and B's state first (section 27). Only then decide, as a team, how a SKU absent from a complete extract is read.
+
+## Client deck for Distributor B (2026-11-10)
+
+For the client call of 2026-11-12. `tools/build_distributor_b_deck.py` reads `data/cleaned/distributor_b_v1.xlsx` and writes `reports/distributor_b_client_deck.pptx` (11 slides, speaker notes in English with a plain French line). The deck is not committed; a copy is in the team Drive `Working files` folder. Display names come from a git-ignored file, `private/deck_labels.json`. Rebuild it after each new extract.
+
+What it says: in-scope OOS rate 4.3% (9L); 53 of 415 loss cells carry 80% of weighted OOS; repeat cells 57%; eight spike location-months; forecast bias not run yet, with what is needed; four data questions for the client. Correction made while building it: the in-scope OOS rate is 4.3% over all in-scope volume, not 4.4% (that figure divided by the volume of the loss cells only).
+
