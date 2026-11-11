@@ -95,3 +95,12 @@ What it says: in-scope OOS rate 4.3% (9L); 53 of 415 loss cells carry 80% of wei
 - **Unmapped codes.** The SCC bridge proposes a client SKU for 11 of the 20 codes, after reproducing all 370 existing mappings. Proposals for Lisa: `tools/propose_distributor_b_mappings.py` writes `data/interim/distributor_b_mapping_proposals.xlsx` (copy in `Working files`). Not applied.
 - **Client deck.** Now 12 slides: a supply-context slide and updated questions (unmapped codes with proposals, supplier allocation). Rebuilt workbook, deck and proposals are in `Working files`.
 
+## Team meeting, 2026-11-10
+
+Notes: `docs/meetings/2026-11-10_team_meeting.md`. For B:
+
+- Alexandre and Lena own B; Yinqi owns A. A's cleaning in this branch stops at the notebook checks; A's owner takes it from there.
+- The three recently launched SKUs the A owner wants excluded are B's three `RTS` ids, already excluded. The workbook and the client deck do not change.
+- Each owner brings a short analysis to the 2026-11-12 call: for B, the 12-slide deck.
+- Data questions go to the client by email the day after the meeting. B's open questions (17, 13, 12) can go out on 2026-11-11.
+

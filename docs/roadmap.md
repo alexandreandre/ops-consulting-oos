@@ -1,7 +1,8 @@
 # Roadmap
 
 Status values: **Not started**, **In progress**, **Done** (only with evidence in the repo).
-No deadlines are set here; add them when agreed with the client.
+Dates agreed so far: client call 2026-11-12 (short analysis per distributor); final report
+2026-12-03 (team meeting of 2026-11-10).
 
 | Phase | Status |
 |---|---|
