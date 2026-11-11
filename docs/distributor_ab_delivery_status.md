@@ -37,17 +37,18 @@ The local checks compare the specified quantities in source order. They do not c
 
 Done with the AI assistant on Alexandre's computer, after Lena's checks above. New checks are in the notebooks: Distributor A section 19, Distributor B sections 26 to 28. No rule was changed, no cleaning was started and no definition was chosen.
 
-### Template v1.1
+### Template v1.1 and the client's answers (updated the same evening)
 
-- The template file was not found on this computer, in the team data folder, or through the Drive connector. The only trace in the repository is the footer the B build script writes ("Template v1.1 rebuild"). The divergences below are as Lena reported them; check them against the template text. Team question 10.
-- **Distributor A.** Lena reports that the template gives instructions for partly shipped rows and for the 76 rows where shipped and unshipped are both blank. The decision of 2026-10-23 says not to impute and to wait for the client. Both cannot apply. Until the team chooses, the decision log stands. What is at stake: 1,032 rows (7,644 cases) and 76 rows (980 cases). Reading them as misses moves January–August 2026 from 95.7% to 95.3%.
-- **Distributor B duplicates.** Three statements disagree on the 14 repeated item-month keys (28 rows): the decision of 2026-10-23 sums them; the decision of 2026-11-04 keeps both rows, flagged, and cites the frozen template; Lena reads template v1.1 as asking to merge them. Two facts help decide. First, the workbook already has an empty `Removed_Dups` sheet, and the build script's flag list (taken from the template when it was written; not rechecked against v1.1) separates `DUP_CHECK` (same product) from `DUP_CODE_DIFF_PRODUCT` (different product names); all 28 rows carry the second flag. Check whether the merge instruction covers that case. Second, merging changes only the Clean row count (7,562 to 7,548): both rows share the location, month and client SKU, so by construction the cell totals, the Pareto, the repeat patterns and the action list do not change. A merged version was not built to test it.
+- **Found.** Template v1.1 is a Google Doc in the team's project folder, frozen on 2026-11-02 and owned by Lisa. It is the cleaning standard. It does not name distributors by code; the mapping to A and B comes from `private/KEY.md`. The rules are recorded in `decisions.md` (2026-11-10).
+- **Distributor A.** No divergence left. The template and the client (2026-10-30, 2026-11-10) agree: short-shipped rows with fill rate 1 count as fulfilled; the 76 rows with shipped, unshipped and OOS blank are excluded; the 1,948 rows with shipped blank and unshipped filled count as fully OOS. The client also asked on 2026-11-10 to exclude the second org of the two-org state. With all of this, January–August 2026 stays at 95.7% (full period 95.92% to 95.89%; notebook A, section 20). A's cleaning is no longer blocked.
+- **Distributor B duplicates.** No divergence. For this distributor the template keeps both rows when one code carries two products, as the 2026-11-04 workbook does. The "merge" rule applies to other distributors. Only open point: whether the kept rows should also be copied to `Removed_Dups` (team question 11).
+- **Not yet in the template:** the client's answers of 2026-11-10 (second org of A's two-org state, "VV" vintages). Lisa to add them.
 
 ### Cases OOS or Cases Unshipped
 
 - **Distributor B.** The two columns are equal on 7,495 of 7,562 rows. On the 67 rows with a pick omit, Cases OOS = Unshipped + Pick Omits (75.7 cases in all). On the weighted 9L ranking, the OOS Pareto has 53 cells and the Unshipped one 52, all 52 shared; every cell keeps its repeat pattern. The template's choice of Cases OOS changes nothing material.
 - **Distributor A.** The columns differ by about 9,650 cases (Unshipped 73,303; OOS 63,654), mostly pick omits: here Unshipped = OOS + Pick Omits. That is the opposite convention to B. Ranked by source id, the 101 ids in the OOS Pareto all sit inside the 108 of the Unshipped Pareto. Neither column covers the blank-unshipped rows: Cases OOS is blank on all of them.
-- Which column the client means by out-of-stock, and whether a pick omit counts, is client question 1. The data cannot settle it.
+- Template v1.1 sets the procedure: compare Σ OOS with Σ Unshipped; a small gap means pick one, a large gap means ask the client whether pick omits count. B's gap is 0.35%, so Cases OOS stays. A's gap is about 13%, so the question goes to the client (client question 1).
 
 ### Forecasts for Distributor B
 
@@ -55,6 +56,7 @@ Done with the AI assistant on Alexandre's computer, after Lena's checks above. N
 - The snapshot file holds exactly 500,000 data rows. Every snapshot in it was taken between 2024-08-20 and 2024-12-19, and December has only 3,597 rows. The round count and the thin last month suggest an export cut at a row limit; this is an inference to confirm with whoever made the extract.
 - It has no row in Distributor B's state, under any spelling. 238 of B's 370 client SKUs appear in it for other states.
 - So no lag-1 forecast exists locally for any 2025 or 2026 month, for any distributor. The blank forecast columns mean missing data, not a zero forecast. Client question 15.
+- Update the same evening: the client saved the 2026 extract for A and B on 2026-10-29 in the client's shared folder. Copy it into the team Planning folder, then rebuild. B's 2025 snapshots are still with the client's IT, so B's 2025 months stay "Lag1 incomplete". A's snapshots exist from September 2024.
 
 ### Exceptions kept visible on B
 
@@ -64,12 +66,12 @@ Mapping: 7,366 matched, 189 not found, 7 ambiguous. Scope: 6,526 included (15,32
 
 | Item | Status |
 |---|---|
-| B Clean sheet, totals and lineage | Ready as a working file. Totals reconcile. Pending: the duplicate rule (team question 10). |
+| B Clean sheet, totals and lineage | Ready as a working file. Totals reconcile. Duplicate handling matches template v1.1. |
 | B concentration (Pareto, repeat, spikes) | Ready as a description, with its limits: in-scope cut, mappings as supplied, Cases OOS. |
 | B action list | Not ready. All 415 bias fields are `incomplete` and buffers are empty. Labels are readings, not causes. |
-| B forecast bias | Blocked. No usable extract (client question 15). |
+| B forecast bias | Blocked. The 2026 extract is on the client's shared folder, not yet in the team Drive; 2025 snapshots are still with the client's IT (client question 15). |
 | A exploration notebook | Ready. |
-| A clean workbook and analysis | Not started, by decision. Blocked on the blank-unshipped answer and on the template divergence. |
+| A clean workbook and analysis | Not started. Unblocked on 2026-11-10: the client answered and the rules are logged. Owner to confirm (team question 12). |
 
 ### Refresh checklist
 
