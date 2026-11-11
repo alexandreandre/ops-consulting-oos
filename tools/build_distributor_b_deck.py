@@ -33,6 +33,7 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Emu, Inches, Pt
 
 ROOT = Path(__file__).resolve().parents[1]
+RAW = ROOT / "data" / "raw"
 WORKBOOK = ROOT / "data" / "cleaned" / "distributor_b_v1.xlsx"
 LABELS = ROOT / "private" / "deck_labels.json"
 OUT = ROOT / "reports" / "distributor_b_client_deck.pptx"
@@ -77,7 +78,7 @@ def load_figures() -> dict:
     reason = clean["Scope_Reason"].fillna("")
     groups = {
         "In scope": clean["Scope_Status"].eq("INCLUDE"),
-        "Supply-constrained (RTS)": reason.eq("QUOTA"),
+        "Supply-constrained (RTS)": reason.eq("RTS"),
         "VAP": reason.eq("VAP"),
         "Limited edition": reason.eq("LIMITED_EDITION"),
         "To review (mapping, size)": clean["Scope_Status"].eq("REVIEW"),
@@ -131,11 +132,73 @@ def load_figures() -> dict:
                                              ordered=("Cases_Ordered", "sum"),
                                              codes=("Dist_Item", "nunique"))
     f["map"] = status
-    f["rts_rows"] = int(reason.eq("QUOTA").sum())
-    f["rts_codes"] = clean.loc[reason.eq("QUOTA"), "Dist_Item"].nunique()
+    f["rts_rows"] = int(reason.eq("RTS").sum())
+    f["rts_codes"] = clean.loc[reason.eq("RTS"), "Dist_Item"].nunique()
     f["dup_rows"] = int(clean["Flags"].fillna("").str.contains("DUP_CODE_DIFF_PRODUCT").sum())
     f["fcst_blank"] = bool(clean["Fcst_Lag1"].isna().all())
+    f.update(supply_context(clean, scope, top))
+    f["proposals"] = mapping_proposals()
     return f
+
+
+def norm(series: pd.Series) -> pd.Series:
+    return series.astype(str).str.replace(r"\.0$", "", regex=True).str.strip()
+
+
+def supply_context(clean: pd.DataFrame, scope: pd.DataFrame, top: pd.DataFrame) -> dict:
+    """Purchasing status, buffer settings and source of the cells (notebook B, sections 29-30).
+    All files are read by position; locations are matched on the workbook's own location names."""
+    out: dict = {}
+    md_path = next(p for p in (RAW / "master_data").glob("*.xlsm") if not p.name.startswith("~$"))
+    item_raw = pd.read_excel(md_path, sheet_name=1, header=None)  # the distributor's item list
+    items = item_raw.iloc[3:, [0, 9]].copy()
+    items.columns = ["item", "purchasing"]
+    items = items.assign(item=norm(items["item"])).drop_duplicates("item").set_index("item")
+    inc = scope.assign(item=norm(scope["Dist_Item"]))
+    inc["purchasing"] = inc["item"].map(items["purchasing"]).fillna("Not on the item list")
+    inc["w"] = inc["OOS_9L"] * inc["Month_Weight"]
+    out["status_share"] = (inc.groupby("purchasing")["w"].sum() / inc["w"].sum()).sort_values(ascending=False)
+    is_top = top["Top 80%"] == "Yes"
+    top_ids = set(top.loc[is_top, "Location"].astype(str) + "|" + norm(top.loc[is_top].iloc[:, 2]))
+    cell_status = inc.groupby("Cell_ID")["purchasing"].first()
+    out["top_status"] = cell_status[cell_status.index.isin(top_ids)].value_counts().to_dict()
+
+    locations = sorted(clean["Market"].dropna().astype(str).unique())
+
+    def location_of(name):
+        hits = [loc for loc in locations if loc.upper() in str(name).upper()]
+        return hits[0] if len(hits) == 1 else None
+
+    par_path = next((RAW / "planning").glob("*Parameters*"))
+    factors = pd.read_excel(par_path, sheet_name=0)
+    factors["loc"] = factors.iloc[:, 0].map(location_of)
+    factors = factors[factors["loc"].notna()].copy()
+    factors["sap"] = factors.iloc[:, 1].astype(str).str.extract(r"(\d{6,8})\s*$")[0]
+    params = factors.groupby(["loc", "sap"]).agg(vf=(factors.columns[5], "first"),
+                                                 override=(factors.columns[3], "first"))
+    cells = top.assign(sap=norm(top.iloc[:, 2])).join(params, on=["Location", "sap"])
+    out["top_with_params"] = int(cells.loc[is_top, "vf"].notna().sum())
+    out["top_vf_values"] = sorted(cells.loc[is_top, "vf"].dropna().unique().tolist())
+    out["top_overrides"] = int(cells.loc[is_top, "override"].fillna(False).astype(bool).sum())
+
+    sm_path = next((RAW / "planning").glob("*Sourcing*"))
+    sourcing = pd.read_excel(sm_path, header=0, usecols=[0, 1, 2])
+    sourcing.columns = ["sku", "dist", "source"]
+    sourcing["loc"] = sourcing["dist"].map(location_of)
+    sourcing = sourcing[sourcing["loc"].notna()]
+    sourcing["sap"] = sourcing["sku"].astype(str).str.extract(r"(\d{6,8})\s*$")[0]
+    source_of = sourcing.groupby(["loc", "sap"])["source"].first()
+    sources = [source_of.get((loc, sku)) for loc, sku in zip(cells.loc[is_top, "Location"], cells.loc[is_top, "sap"])]
+    out["top_sources"] = pd.Series(sources).dropna().nunique()
+    return out
+
+
+def mapping_proposals() -> dict:
+    """Counts from tools/propose_distributor_b_mappings.py, if it has been run."""
+    path = ROOT / "data" / "interim" / "distributor_b_mapping_proposals.xlsx"
+    if not path.exists():
+        return {}
+    return pd.read_excel(path, sheet_name="Proposals")["Proposal"].value_counts().to_dict()
 
 
 def labels() -> dict:
@@ -286,7 +349,10 @@ def build(f: dict, lab: dict) -> Presentation:
         stat(s, MARGIN + i * (cw + gap), top_y, cw, ch, value, label)
     text(s, MARGIN, Inches(4.6), W - 2 * MARGIN, Inches(1.8),
          [[("Not yet answered: ", {"bold": True, "color": WINE}),
-           ("do forecasts explain the stockouts? The forecast extract is needed first (slide 9).", {})],
+           ("do forecasts explain the stockouts? The forecast extract is needed first.", {})],
+          [("Supply side: ", {"bold": True, "color": WINE}),
+           (f"{pct(f['status_share'].get('Allocated - Supplier', 0), 0)} of the loss is on items the distributor "
+            "lists as allocated by the supplier.", {})],
           [("Every figure ties back to the raw file: ", {"bold": True, "color": WINE}),
            ("ordered, unshipped and out-of-stock totals match to the case.", {})]], size=16)
     notes(s,
@@ -522,7 +588,58 @@ def build(f: dict, lab: dict) -> Presentation:
           "Quelques mois sont bien pires que d'habitude, souvent aux deux entrepôts en même temps : la cause "
           "est sans doute en amont. Demander au client s'il sait ce qui s'est passé ces mois-là.")
 
-    # 9. Forecast
+    # 9. Supply context
+    st = f["status_share"]
+    s = base_slide(prs, f"{pct(st.get('Allocated - Supplier', 0), 0)} of the loss is on items listed as allocated by the supplier",
+                   "Share of weighted out-of-stock 9L by the item's purchasing status on the distributor's item list (status as of today)",
+                   footer=footer)
+    data = CategoryChartData()
+    order = [k for k in st.index if st[k] >= 0.005]
+    data.categories = order
+    data.add_series("Share of loss", [round(float(st[k]), 4) for k in order])
+    gf = s.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, MARGIN, Inches(1.8), Inches(7.4), Inches(4.9), data)
+    chart = gf.chart
+    style_chart(chart, percent_axis=True, legend=False)
+    chart.has_title = False
+    plot = chart.plots[0]
+    plot.gap_width = 70
+    plot.has_data_labels = True
+    plot.data_labels.number_format = "0%"
+    plot.data_labels.number_format_is_linked = False
+    plot.data_labels.position = XL_LABEL_POSITION.OUTSIDE_END
+    plot.data_labels.font.size = Pt(14)
+    plot.data_labels.font.bold = True
+    for idx in range(len(order)):
+        pt = plot.series[0].points[idx]
+        pt.format.fill.solid()
+        pt.format.fill.fore_color.rgb = WINE if idx == 0 else ROSE
+    chart.value_axis.maximum_scale = 0.8
+    ts = f["top_status"]
+    x2 = MARGIN + Inches(7.8)
+    card(s, x2, Inches(1.8), W - MARGIN - x2, Inches(4.9))
+    vf = " or ".join(f"{v:g}" for v in f["top_vf_values"])
+    text(s, x2 + Inches(0.3), Inches(2.05), W - MARGIN - x2 - Inches(0.6), Inches(4.5),
+         [[("What the reference files add", {"bold": True, "color": WINE, "size": 18})],
+          f"Of the {f['cells_top80']} largest cells: {ts.get('Allocated - Supplier', 0)} allocated, "
+          f"{ts.get('Discontinued', 0)} discontinued, {ts.get('Active', 0)} active.",
+          f"All {f['cells_top80']} come from {'one source' if f['top_sources'] == 1 else str(f['top_sources']) + ' sources'}, "
+          "shared by both locations.",
+          f"{f['top_with_params']} have buffer settings: variability factor {vf}, "
+          f"{'none' if f['top_overrides'] == 0 else f['top_overrides']} overridden.",
+          [("Question: ", {"bold": True}),
+           ("does \"allocated\" mean you ration these items? If so, a bigger buffer would not fix them.", {})]],
+         size=14, spacing=8)
+    notes(s,
+          "Most of the loss is on items the distributor's own item list marks as allocated by the supplier, and about a "
+          "fifth on items now discontinued. The status is today's, so it may have changed. The big cells all come from "
+          "the same source, at both locations, and their buffer settings are the defaults. Our question: does "
+          "'allocated' mean these items are rationed? Then buffers are not the lever.",
+          "La plupart des ruptures concernent des produits que le distributeur marque « alloués par le fournisseur » "
+          "(rationnés ?), et environ 20 % des produits arrêtés. Toutes les grosses cellules viennent de la même usine. "
+          "Les réglages de stock tampon sont ceux par défaut. Question au client : « alloué » veut-il dire rationné ? "
+          "Si oui, augmenter le stock tampon ne réglera pas le problème.")
+
+    # 10. Forecast
     s = base_slide(prs, "Do forecasts explain the stockouts? Not answered yet",
                    "What we need to run the forecast-bias test", footer=footer)
     steps = [
@@ -556,12 +673,14 @@ def build(f: dict, lab: dict) -> Presentation:
     qs = [
         ("Unmapped items",
          f"{int(nf.codes) if nf is not None else 0} distributor items ({int(nf.rows) if nf is not None else 0} rows, "
-         f"{num(nf.ordered) if nf is not None else 0} cases ordered) are not in Master Data. "
-         f"{int(amb.codes) if amb is not None else 0} item points to two client SKUs. Which SKU should each map to?"),
+         f"{num(nf.ordered) if nf is not None else 0} cases ordered) are not in Master Data. Through the SCC code we "
+         f"propose a client SKU for {f['proposals'].get('PROPOSED', 0)}; {f['proposals'].get('NO CANDIDATE', 0)} have "
+         f"no match and {int(amb.codes) if amb is not None else 0} points to two SKUs. Can you confirm?"),
         ("RTS items",
          f"{f['rts_codes']} items ({f['rts_rows']} rows) are set aside as RTS, matched from the description. "
          "Are they the three RTS SKUs you named?"),
-        ("Two locations", "Do the two shipping locations run separate warehouses and buffers?"),
+        ("Allocated items", "What does \"Allocated - Supplier\" mean on the distributor's item list, and since when "
+         "has each of the large items been allocated?"),
         ("Flags", "Do the Master Data deletion or active flags mean \"do not replenish\"?"),
     ]
     qw, qh, qgap = Inches(5.9), Inches(2.25), Inches(0.33)
@@ -574,11 +693,12 @@ def build(f: dict, lab: dict) -> Presentation:
         text(s, x + Inches(0.3), y + Inches(0.85), qw - Inches(0.6), qh - Inches(1.0), body, size=14)
     notes(s,
           "Four questions where we need you. Some items are not in Master Data, and we don't want to guess. "
-          "We need to confirm the three RTS items. And whether the two locations are separate warehouses.",
+          "We found candidates for most of them through the SCC code; please confirm. We need to confirm the three "
+          "RTS items, and what 'allocated' means.",
           "Quatre questions pour le client : les codes produits introuvables (on ne devine pas), les 3 produits RTS, "
-          "les deux entrepôts séparés ou non, et le sens des indicateurs de Master Data.")
+          "le sens de « Allocated - Supplier », et le sens des indicateurs de Master Data.")
 
-    # 11. Next steps
+    # 12. Next steps
     s = prs.slides.add_slide(prs.slide_layouts[6])
     s.background.fill.solid()
     s.background.fill.fore_color.rgb = WINE
@@ -586,7 +706,7 @@ def build(f: dict, lab: dict) -> Presentation:
     steps = [
         ("1", "Copy the 2026 forecast extract into the shared folder", lab["client"] + " / our team"),
         ("2", "Run the forecast-bias test on 2026 months", "Our team"),
-        ("3", "Answer the four data questions", lab["client"]),
+        ("3", "Answer the four data questions, starting with supplier allocation", lab["client"]),
         ("4", "Turn the repeat cells into a short list of buffer changes to review", "Together"),
     ]
     for i, (n, what, who) in enumerate(steps):

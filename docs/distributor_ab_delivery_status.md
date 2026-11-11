@@ -60,7 +60,7 @@ Done with the AI assistant on Alexandre's computer, after Lena's checks above. N
 
 ### Exceptions kept visible on B
 
-Mapping: 7,366 matched, 189 not found, 7 ambiguous. Scope: 6,526 included (15,327.5 OOS cases); excluded 372 limited edition (1,420.8), 23 supply-constrained `QUOTA` (2,488.7), 402 VAP (1,986.7); review 196 mapping (164.7) and 43 size (13.0). None is dropped and no client SKU is guessed.
+Mapping: 7,366 matched, 189 not found, 7 ambiguous. Scope: 6,526 included (15,327.5 OOS cases); excluded 372 limited edition (1,420.8), 23 supply-constrained `RTS` (2,488.7), 402 VAP (1,986.7); review 196 mapping (164.7) and 43 size (13.0). None is dropped and no client SKU is guessed.
 
 ### What can be delivered now
 
@@ -87,4 +87,11 @@ When a new fill-rate extract, Master Data or forecast extract arrives:
 For the client call of 2026-11-12. `tools/build_distributor_b_deck.py` reads `data/cleaned/distributor_b_v1.xlsx` and writes `reports/distributor_b_client_deck.pptx` (11 slides, speaker notes in English with a plain French line). The deck is not committed; a copy is in the team Drive `Working files` folder. Display names come from a git-ignored file, `private/deck_labels.json`. Rebuild it after each new extract.
 
 What it says: in-scope OOS rate 4.3% (9L); 53 of 415 loss cells carry 80% of weighted OOS; repeat cells 57%; eight spike location-months; forecast bias not run yet, with what is needed; four data questions for the client. Correction made while building it: the in-scope OOS rate is 4.3% over all in-scope volume, not 4.4% (that figure divided by the volume of the loss cells only).
+
+## Distributor B, later the same evening
+
+- **Code review.** An independent read of `tools/build_distributor_b_v1.py` against template v1.1 raised 13 points. The bugs are fixed and logged in `decisions.md`; the rebuilt workbook has the same totals, the same 53 Pareto cells and the same patterns. The open method points are listed there for the team.
+- **New context (notebook B, part 7).** About 70% of the weighted loss is on items the distributor lists as "Allocated - Supplier" and 20% on "Discontinued" items (client question 17). The 53 Pareto cells all come from one source, shared by both locations. 42 of them have buffer settings, all at the default variability factor, none overridden; repeat and one-off cells have the same settings. The two locations have their own location codes and parameters.
+- **Unmapped codes.** The SCC bridge proposes a client SKU for 11 of the 20 codes, after reproducing all 370 existing mappings. Proposals for Lisa: `tools/propose_distributor_b_mappings.py` writes `data/interim/distributor_b_mapping_proposals.xlsx` (copy in `Working files`). Not applied.
+- **Client deck.** Now 12 slides: a supply-context slide and updated questions (unmapped codes with proposals, supplier allocation). Rebuilt workbook, deck and proposals are in `Working files`.
 
