@@ -104,3 +104,4 @@ Notes: `docs/meetings/2026-11-10_team_meeting.md`. For B:
 - Each owner brings a short analysis to the 2026-11-12 call: for B, the 12-slide deck.
 - Data questions go to the client by email the day after the meeting. B's open questions (17, 13, 12) can go out on 2026-11-11.
 
+- After the meeting (same evening): notebook B part 8 and a new deck slide (now 13 slides). Each spike is narrow: three products make 65% to 87% of it. One client SKU, a 750 ml gift box, is in 7 of the 8 spikes, ranks 1 and 2 in the Pareto, and carries about 22% of the weighted loss for about 4% of the volume; its item status is "Allocated - Supplier". No spike comes back in the same calendar month a year later: no seasonality to report. Deck copied to `Working files`.

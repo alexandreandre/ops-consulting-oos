@@ -137,8 +137,43 @@ def load_figures() -> dict:
     f["dup_rows"] = int(clean["Flags"].fillna("").str.contains("DUP_CODE_DIFF_PRODUCT").sum())
     f["fcst_blank"] = bool(clean["Fcst_Lag1"].isna().all())
     f.update(supply_context(clean, scope, top))
+    f.update(spike_drivers(scope, top, spikes, f["item_status"]))
     f["proposals"] = mapping_proposals()
     return f
+
+
+def spike_drivers(scope: pd.DataFrame, top: pd.DataFrame, spikes: pd.DataFrame, item_status: pd.Series) -> dict:
+    """How narrow each spike is, the product that recurs across spikes, and whether spikes come back in
+    the same calendar month. Uses the workbook's Spikes sheet (top three SKUs per spike)."""
+    out: dict = {}
+    sku_cols = ["SKU 1", "SKU 2", "SKU 3"]
+    oos_cols = ["OOS 9L 1", "OOS 9L 2", "OOS 9L 3"]
+    top1 = spikes["OOS 9L 1"] / spikes["OOS 9L"]
+    top3 = spikes[oos_cols].sum(axis=1) / spikes["OOS 9L"]
+    out["spike_top1"] = (float(top1.min()), float(top1.max()))
+    out["spike_top3"] = (float(top3.min()), float(top3.max()))
+    in_top3 = pd.concat([norm(spikes[c]) for c in sku_cols])
+    hero = in_top3.value_counts().index[0]
+    out["hero_spikes"] = int(sum(hero in set(norm(spikes.loc[i, sku_cols])) for i in spikes.index))
+    out["hero_spikes_first"] = int((norm(spikes["SKU 1"]) == hero).sum())
+    rows = scope[norm(scope.iloc[:, 21]) == hero]  # client SKU, column V
+    cells = top[norm(top.iloc[:, 2]) == hero]
+    weighted = top["Weighted OOS 9L"].sum()
+    out["hero"] = {
+        "sku": hero,
+        "description": " ".join(str(rows["Product_Desc"].iloc[0]).split()),
+        "display": str(rows["Display_Type"].iloc[0]).lower(),
+        "size": str(rows["Bottle_Size"].iloc[0]),
+        "loss_share": float(cells["Weighted OOS 9L"].sum() / weighted),
+        "volume_share": float(rows["Ordered_9L"].sum() / scope["Ordered_9L"].sum()),
+        "rate": float(rows["OOS_9L"].sum() / rows["Ordered_9L"].sum()),
+        "ranks": cells["Rank"].astype(int).tolist(),
+        "months": dict(zip(cells["Location"], cells["Weighted OOS months"])),
+        "status": item_status.get(norm(rows["Dist_Item"]).iloc[0], "not on the item list"),
+    }
+    years_per_month = spikes.groupby(spikes["Month"].dt.month)["Month"].agg(lambda m: m.dt.year.nunique())
+    out["spike_month_repeats"] = int((years_per_month > 1).sum())
+    return out
 
 
 def norm(series: pd.Series) -> pd.Series:
@@ -162,6 +197,7 @@ def supply_context(clean: pd.DataFrame, scope: pd.DataFrame, top: pd.DataFrame) 
     top_ids = set(top.loc[is_top, "Location"].astype(str) + "|" + norm(top.loc[is_top].iloc[:, 2]))
     cell_status = inc.groupby("Cell_ID")["purchasing"].first()
     out["top_status"] = cell_status[cell_status.index.isin(top_ids)].value_counts().to_dict()
+    out["item_status"] = items["purchasing"]
 
     locations = sorted(clean["Market"].dropna().astype(str).unique())
 
@@ -348,7 +384,10 @@ def build(f: dict, lab: dict) -> Presentation:
     for i, (value, label) in enumerate(stats):
         stat(s, MARGIN + i * (cw + gap), top_y, cw, ch, value, label)
     text(s, MARGIN, Inches(4.6), W - 2 * MARGIN, Inches(1.8),
-         [[("Not yet answered: ", {"bold": True, "color": WINE}),
+         [[("One product stands out: ", {"bold": True, "color": WINE}),
+           (f"a {f['hero']['display']} with {pct(f['hero']['volume_share'], 0)} of the volume carries "
+            f"{pct(f['hero']['loss_share'], 0)} of the loss.", {})],
+          [("Not yet answered: ", {"bold": True, "color": WINE}),
            ("do forecasts explain the stockouts? The forecast extract is needed first.", {})],
           [("Supply side: ", {"bold": True, "color": WINE}),
            (f"{pct(f['status_share'].get('Allocated - Supplier', 0), 0)} of the loss is on items the distributor "
@@ -508,7 +547,42 @@ def build(f: dict, lab: dict) -> Presentation:
           "Les 10 plus gros couples produit-entrepôt. Demander au client s'il connaît la raison pour certains "
           "(problème d'approvisionnement, changement de millésime, produit en fin de vie).")
 
-    # 7. Patterns
+    # 7. One product
+    hero = f["hero"]
+    months = hero["months"]
+    s = base_slide(prs, f"One product: {pct(hero['volume_share'], 0)} of the volume, "
+                        f"{pct(hero['loss_share'], 0)} of the loss",
+                   f"{hero['description']} ({hero['display']}, {hero['size']}), client SKU {hero['sku']}, "
+                   f"ranks {' and '.join(str(r) for r in hero['ranks'])} in the table", footer=footer)
+    hero_slide = len(prs.slides)
+    cw, gap = Inches(3.9), Inches(0.33)
+    hero_stats = [
+        (pct(hero["loss_share"], 0), "of the weighted loss, at both locations together"),
+        (f"{max(months.values()):.0f} of {f['months']}",
+         "months with a stockout (" + ", ".join(f"{k} {v:.0f}" for k, v in months.items()) + ")"),
+        (f"{f['hero_spikes']} of {len(f['spikes'])}", "spikes have this product in their top three"),
+    ]
+    for i, (value, label) in enumerate(hero_stats):
+        stat(s, MARGIN + i * (cw + gap), Inches(1.8), cw, Inches(2.2), value, label)
+    card(s, MARGIN, Inches(4.3), W - 2 * MARGIN, Inches(2.4))
+    text(s, MARGIN + Inches(0.3), Inches(4.5), W - 2 * MARGIN - Inches(0.6), Inches(2.1),
+         [[("What we see", {"bold": True, "color": WINE, "size": 18})],
+          f"Its out-of-stock rate is {pct(hero['rate'], 0)}, against {pct(f['oos_rate'])} for everything in scope. "
+          f"The distributor's item list marks it \"{hero['status']}\".",
+          [("Question: ", {"bold": True}),
+           ("is this product rationed to the distributor, and since when? If so, more buffer would not fix "
+            "a fifth of the loss.", {})]], size=15, spacing=8)
+    notes(s,
+          f"One product stands out. This {hero['display']} is about {pct(hero['volume_share'], 0)} of the volume but "
+          f"{pct(hero['loss_share'], 0)} of the loss. It ran out in about {max(months.values()):.0f} of {f['months']} months "
+          f"at both locations, and it is in {f['hero_spikes']} of the {len(f['spikes'])} spikes. The item list says it "
+          "is allocated by the supplier. Is it rationed, and since when?",
+          f"Un seul produit (un coffret 750 ml) pèse ~{pct(hero['volume_share'], 0)} du volume mais "
+          f"~{pct(hero['loss_share'], 0)} des ruptures. Il manque souvent aux deux entrepôts et il est dans presque "
+          "tous les pics. Le distributeur le marque « alloué par le fournisseur ». Demander au client s'il est "
+          "rationné et depuis quand : si oui, ce n'est pas un problème de stock tampon.")
+
+    # 8. Patterns
     s = base_slide(prs, f"{pct(share.get('Repeat', 0), 0)} of the loss is in cells that miss again and again",
                    "Share of weighted out-of-stock 9L by how often the cell missed", footer=footer)
     order = [("Repeat", "Repeat (4+ months)"), ("Intermittent", "Intermittent (3 months)"), ("Event", "One-off (2 or fewer)")]
@@ -549,7 +623,7 @@ def build(f: dict, lab: dict) -> Presentation:
           "La majorité des ruptures se répètent. Ça fait penser à un réglage inadapté (stock tampon, prévision, "
           "délai), mais on ne pourra le confirmer qu'avec les prévisions et les buffers.")
 
-    # 8. Spikes
+    # 9. Spikes
     sp = f["spikes"]
     s = base_slide(prs, "A few months spike, often at both locations at once",
                    "Location-months whose weighted out-of-stock 9L is at least twice the location's monthly average",
@@ -576,19 +650,26 @@ def build(f: dict, lab: dict) -> Presentation:
     x2 = MARGIN + Inches(7.8)
     card(s, x2, Inches(1.8), W - MARGIN - x2, Inches(4.9))
     text(s, x2 + Inches(0.3), Inches(2.05), W - MARGIN - x2 - Inches(0.6), Inches(4.5),
-         [[("Questions for you", {"bold": True, "color": WINE, "size": 18})],
-          "Spike months: " + ", ".join(f["spike_months"]) + ".",
-          "Was there a known event (supply delay, allocation, promotion, price change)?",
-          "When both locations spike together, the cause is likely upstream of the distributor."],
+         [[("What drives them", {"bold": True, "color": WINE, "size": 18})],
+          f"Each spike is narrow: three products make {pct(f['spike_top3'][0], 0)} to "
+          f"{pct(f['spike_top3'][1], 0)} of it.",
+          f"The {hero['display']} of slide {hero_slide} is in the top three of {f['hero_spikes']} of {len(f['spikes'])}.",
+          ("No spike comes back in the same calendar month the next year: no seasonal pattern so far."
+           if f["spike_month_repeats"] == 0 else
+           f"{f['spike_month_repeats']} calendar month(s) spike in more than one year."),
+          [("Question: ", {"bold": True}),
+           ("was there a known event in " + ", ".join(f["spike_months"]) + "?", {})]],
          size=14, spacing=8)
     notes(s,
           "Some months are much worse than usual, for example " + ", ".join(f["spike_months"][:3]) + ". "
-          "Several hit both locations at the same time, which suggests a cause upstream. "
-          "Do you know what happened in those months?",
-          "Quelques mois sont bien pires que d'habitude, souvent aux deux entrepôts en même temps : la cause "
-          "est sans doute en amont. Demander au client s'il sait ce qui s'est passé ces mois-là.")
+          f"Each spike comes from a few products: the top three make {pct(f['spike_top3'][0], 0)} or more of it, "
+          f"and the same {hero['display']} is in {f['hero_spikes']} of them. They don't come back in the same month "
+          "the next year, so we don't see seasonality yet. Do you know what happened in those months?",
+          "Quelques mois sont bien pires que d'habitude. Chaque pic vient de 2 ou 3 produits, et c'est presque "
+          "toujours le même coffret. Ça ne revient pas au même mois l'année suivante : pas de saisonnalité visible. "
+          "Demander au client s'il sait ce qui s'est passé ces mois-là.")
 
-    # 9. Supply context
+    # 10. Supply context
     st = f["status_share"]
     s = base_slide(prs, f"{pct(st.get('Allocated - Supplier', 0), 0)} of the loss is on items listed as allocated by the supplier",
                    "Share of weighted out-of-stock 9L by the item's purchasing status on the distributor's item list (status as of today)",
@@ -639,7 +720,7 @@ def build(f: dict, lab: dict) -> Presentation:
           "Les réglages de stock tampon sont ceux par défaut. Question au client : « alloué » veut-il dire rationné ? "
           "Si oui, augmenter le stock tampon ne réglera pas le problème.")
 
-    # 10. Forecast
+    # 11. Forecast
     s = base_slide(prs, "Do forecasts explain the stockouts? Not answered yet",
                    "What we need to run the forecast-bias test", footer=footer)
     steps = [
@@ -665,7 +746,7 @@ def build(f: dict, lab: dict) -> Presentation:
           "On ne peut pas encore répondre sur les prévisions. Il nous faut le fichier 2026 (sur leur SharePoint) "
           "et les prévisions 2025 (encore chez leur informatique). Un fichier manquant n'est jamais compté comme zéro.")
 
-    # 10. Data questions
+    # 12. Data questions
     m = f["map"]
     nf = m.loc["NOT_FOUND"] if "NOT_FOUND" in m.index else None
     amb = m.loc["AMBIGUOUS"] if "AMBIGUOUS" in m.index else None
@@ -698,7 +779,7 @@ def build(f: dict, lab: dict) -> Presentation:
           "Quatre questions pour le client : les codes produits introuvables (on ne devine pas), les 3 produits RTS, "
           "le sens de « Allocated - Supplier », et le sens des indicateurs de Master Data.")
 
-    # 12. Next steps
+    # 13. Next steps
     s = prs.slides.add_slide(prs.slide_layouts[6])
     s.background.fill.solid()
     s.background.fill.fore_color.rgb = WINE
@@ -737,6 +818,7 @@ def main() -> None:
         out = Path(os.environ["DECK_MASK"])
         figures["top10"]["description"] = figures["top10"]["description"].astype(str).map(
             lambda d: ("Product name " * 10)[: len(d)])
+        figures["hero"]["description"] = ("Product name " * 10)[: len(figures["hero"]["description"])]
     deck = build(figures, labels())
     out.parent.mkdir(exist_ok=True)
     deck.save(out)
