@@ -105,3 +105,13 @@ Notes kept locally by Alexandre, shared within the team directly. For B:
 - Data questions go to the client by email the day after the meeting. B's open questions (17, 13, 12) can go out on 2026-11-11.
 
 - After the meeting (same evening): notebook B part 8 and a new deck slide (now 13 slides). Each spike is narrow: three products make 65% to 87% of it. One client SKU, a 750 ml gift box, is in 7 of the 8 spikes, ranks 1 and 2 in the Pareto, and carries about 22% of the weighted loss for about 4% of the volume; its item status is "Allocated - Supplier". No spike comes back in the same calendar month a year later: no seasonality to report. The deck stays on Alexandre's computer (`reports/`, not shared on the Drive).
+
+## Client call, 2026-11-12
+
+Notes kept locally by Alexandre (`private/meetings/`), shared within the team directly. For B:
+
+- B's results were presented (about 4% not delivered, 53 cells for 80%, 57% repeat, eight spikes). The client wants to **review the data before any next phase** (prediction, buffers). The B file goes on the client's SharePoint, in the Columbia folder.
+- **New B extract:** the client added September and October 2026 and replaced August (back orders filled later change recent months). B's totals will move: Section 28 of the notebook will fail its asserts on purpose, and the change must be explained (new months, revised August) before delivery. October's main unfilled item is a late VAP, outside the in-scope cut.
+- **Unmapped codes:** the client's rule (see `decisions.md`, 2026-11-12) replaces a case-by-case answer. Apply it to the 20 codes on the new extract and keep a list of what stays unmapped.
+- **Scope:** C moves to AA items only. B's equivalent is open (client question 18). It decides whether the allocated items, about 70% of B's weighted loss, stay in the cut.
+- **Next dates:** files on SharePoint by 2026-11-16 or 11-17; data review at the 2026-11-19 call.

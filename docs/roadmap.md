@@ -1,8 +1,9 @@
 # Roadmap
 
 Status values: **Not started**, **In progress**, **Done** (only with evidence in the repo).
-Dates agreed so far: client call 2026-11-12 (short analysis per distributor); final report
-2026-12-03 (team meeting of 2026-11-10).
+Dates agreed so far: client call 2026-11-12 (short analysis per distributor, done); files saved
+on the client's SharePoint by 2026-11-16 or 11-17; data sign-off at the client call of
+2026-11-19; final report 2026-12-03.
 
 | Phase | Status |
 |---|---|
