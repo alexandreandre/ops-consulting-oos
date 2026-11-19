@@ -34,11 +34,13 @@ recommendations. See [docs/roadmap.md](docs/roadmap.md).
 
 ## Team
 
-| Member | Initial responsibility |
+| Member | Responsibility (confirmed at the team meeting of 2026-11-10) |
 |---|---|
-| Alexandre | Distributor A and Distributor B datasets |
-| Sying | Distributor C and Distributor D datasets |
-| Lisa | Master Data, ambiguous mappings, standardization support, reconciliation |
+| Lisa | Project lead, cleaning template, Master Data, ambiguous mappings, reconciliation |
+| Yinqi | Distributor A |
+| Alexandre, Lena | Distributor B |
+| Siying | Distributor C |
+| Siddarth, Chuxin | Distributor D |
 
 This allocation may evolve. Everyone follows the same methodology so results stay comparable.
 
