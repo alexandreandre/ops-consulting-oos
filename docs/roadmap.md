@@ -1,9 +1,12 @@
 # Roadmap
 
 Status values: **Not started**, **In progress**, **Done** (only with evidence in the repo).
-Dates agreed so far: client call 2026-11-12 (short analysis per distributor, done); files saved
-on the client's SharePoint by 2026-11-16 or 11-17; data sign-off at the client call of
-2026-11-19; final report 2026-12-03.
+Dates agreed so far (project lead's message of 2026-11-18): client call 2026-11-12 (done);
+cleaned data uploaded to the client's SharePoint folder "OOS Mitigation > Columbia Files" before
+the 2026-11-19 call (3:00 PM), the last client call before the final presentation (no call on
+2026-11-26, Thanksgiving); all cleaning, analysis and presentation visuals finished by
+2026-12-01, reviewed within the team; final presentation to the client and the professor on
+2026-12-03.
 
 | Phase | Status |
 |---|---|
