@@ -33,6 +33,11 @@ LARGE_SHARE = 0.80
 SEVERITY_MIN_ORDERED_9L = 10_000
 SPIKE_INDEX = 2.0
 SIZE_TOLERANCE_ML = 1.0
+# Client rule of 2026-11-12 for codes with no client SKU: single barrel / made to order
+# (by text in the description) is excluded; anything else with no order in the last 12
+# months of the extract is excluded; what is left stays REVIEW and is listed on Unmapped.
+UNMAPPED_RECENT_MONTHS = 12
+SINGLE_BARREL_PATTERN = r"\bSB\b|\bCASK\b|SINGLE BARREL"
 
 NAVY = "1F4E79"
 HEADER_FONT = Font(name="Arial", bold=True, color="FFFFFF", size=10)
@@ -297,6 +302,12 @@ def build_clean(fill: pd.DataFrame, master: pd.DataFrame, anaplan: pd.DataFrame)
         & (merged["bottle_ml"] - merged["desc_ml"]).abs().gt(SIZE_TOLERANCE_ML)
     )
     merged["flags"] = merged.apply(flags, axis=1)
+    latest = merged["month"].max()
+    window_start = latest - pd.DateOffset(months=UNMAPPED_RECENT_MONTHS - 1)
+    recent = merged["month"].ge(window_start) & merged["cases_ordered"].gt(0)
+    merged["recent_sale"] = recent.groupby(merged["dist_item"]).transform("any")
+    merged["single_barrel"] = merged["product_desc"].astype(str).str.contains(SINGLE_BARREL_PATTERN, case=False, regex=True)
+
     merged["month_weight"] = merged["month"].map(lambda stamp: 0.5 if stamp.month in (12, 1) else 1.0)
     merged["oos_9l"] = merged["cases_oos"] * merged["nine_l"]
     merged["ordered_9l"] = merged["cases_ordered"] * merged["nine_l"]
@@ -321,6 +332,10 @@ def scope_for(row) -> tuple[str, str]:
     if display == "VAP":
         return "EXCLUDE", "VAP"
     if row["map_status"] in ("NOT_FOUND", "AMBIGUOUS") or not row["sap"]:
+        if row["single_barrel"]:
+            return "EXCLUDE", "SINGLE_BARREL"
+        if not row["recent_sale"]:
+            return "EXCLUDE", "UNMAPPED_NO_SALE_12M"
         return "REVIEW", "MAPPING"
     if row["size_gap"]:
         return "REVIEW", "SIZE_REVIEW"
@@ -603,6 +618,7 @@ def write_workbook(clean: pd.DataFrame, cells: pd.DataFrame, locations: pd.DataF
     write_bias(wb.create_sheet("Bias_Test"))
     write_spikes(wb.create_sheet("Spikes"), spikes)
     write_qa(wb.create_sheet("QA"), clean, cells, locations, raw_totals)
+    write_unmapped(wb.create_sheet("Unmapped"), clean)
     write_clean(wb.create_sheet("Clean"), clean)
     write_removed(wb.create_sheet("Removed_Dups"))
     wb.active = wb["Action_List"]
@@ -635,6 +651,7 @@ def write_notes(ws, clean, cells, locations, spikes, raw_totals) -> None:
         f"Raw ordered {raw_totals['ordered']:.3f}, unshipped {raw_totals['unshipped']:.3f}, OOS {raw_totals['oos']:.3f}. Clean matches these totals. Removed_Dups is empty.",
         f"Action rows: {int((cells['weighted_oos_9l'] > 1e-9).sum())}. Spike months: {len(spikes)}. Locations at or above {SEVERITY_MIN_ORDERED_9L:,.0f} ordered 9L: {int(locations['in_table'].sum())} of {len(locations)}.",
         "A quadrant or an action line is a reading of the rule. It is not a confirmed root cause.",
+        unmapped_line(clean),
     ]
     ws["A1"] = "How to read this file"
     ws["A1"].font = Font(name="Arial", bold=True, size=14, color=NAVY)
@@ -651,8 +668,24 @@ def write_notes(ws, clean, cells, locations, spikes, raw_totals) -> None:
     ws.page_setup.paperSize = ws.PAPERSIZE_TABLOID
     ws.sheet_view.showGridLines = False
     ws.oddFooter.right.text = "Page &P"
-    for row in range(3, 15):
+    for row in range(3, 3 + len(lines)):
         ws.row_dimensions[row].height = 32
+
+
+def unmapped_line(clean: pd.DataFrame) -> str:
+    table = unmapped_table(clean)
+    if table.empty:
+        return "Every distributor item has a client SKU. Unmapped is empty."
+    keep = table[table["scope_status"] == "REVIEW"]
+    dropped = table[table["scope_status"] == "EXCLUDE"]
+    window_ordered = float(clean.loc[clean["month"].ge(clean["month"].max() - pd.DateOffset(months=UNMAPPED_RECENT_MONTHS - 1)), "cases_ordered"].sum())
+    share = float(keep["ordered_recent"].sum()) / window_ordered if window_ordered else 0.0
+    return (
+        f"Unmapped (client rule of 2026-11-12): {len(table)} distributor items have no single client SKU. "
+        f"{len(dropped)} are excluded (single barrel, or no order in the last {UNMAPPED_RECENT_MONTHS} months). "
+        f"{len(keep)} stay listed for a Master Data fix: {keep['ordered_recent'].sum():,.0f} cases ordered in the last "
+        f"{UNMAPPED_RECENT_MONTHS} months ({share:.1%} of the distributor's volume) and {keep['oos_total'].sum():,.0f} cases OOS in all."
+    )
 
 
 def write_action(ws, cells: pd.DataFrame) -> None:
@@ -887,6 +920,61 @@ def write_qa(ws, clean, cells, locations, raw_totals) -> None:
     ws.freeze_panes = "A2"
 
 
+def unmapped_table(clean: pd.DataFrame) -> pd.DataFrame:
+    """One row per distributor item with no single client SKU, for master-data fixes."""
+    rows = clean[clean["map_status"].isin(["NOT_FOUND", "AMBIGUOUS"]) | clean["sap"].isna()]
+    if rows.empty:
+        return pd.DataFrame()
+    latest = clean["month"].max()
+    window_start = latest - pd.DateOffset(months=UNMAPPED_RECENT_MONTHS - 1)
+    ordered_recent = rows["cases_ordered"].where(rows["month"].ge(window_start), 0.0)
+    table = (
+        rows.assign(ordered_recent=ordered_recent, ordered_month=rows["month"].where(rows["cases_ordered"].gt(0)))
+        .groupby("dist_item", as_index=False)
+        .agg(
+            description=("product_desc", "last"),
+            map_status=("map_status", "first"),
+            last_order=("ordered_month", "max"),
+            ordered_recent=("ordered_recent", "sum"),
+            ordered_total=("cases_ordered", "sum"),
+            oos_total=("cases_oos", "sum"),
+            scope_status=("scope_status", "first"),
+            scope_reason=("scope_reason", "first"),
+        )
+    )
+    table["next_step"] = table["scope_status"].map(
+        {"REVIEW": "Fix in Master Data (or confirm a client SKU)", "EXCLUDE": "None: excluded by the client rule"}
+    )
+    return table.sort_values(["scope_status", "ordered_recent"], ascending=[False, False])
+
+
+def write_unmapped(ws, clean: pd.DataFrame) -> None:
+    table = unmapped_table(clean)
+    latest = clean["month"].max()
+    window_start = latest - pd.DateOffset(months=UNMAPPED_RECENT_MONTHS - 1)
+    headers = [
+        "Dist_Item", "Description", "Map_Status", "Last month ordered",
+        f"Cases ordered {window_start:%b %Y}-{latest:%b %Y}", "Cases ordered, all months",
+        "Cases OOS, all months", "Scope_Status", "Scope_Reason", "Next step",
+    ]
+    rows = [
+        [
+            r.dist_item, r.description, r.map_status,
+            r.last_order.to_pydatetime() if pd.notna(r.last_order) else None,
+            float(r.ordered_recent), float(r.ordered_total), float(r.oos_total),
+            r.scope_status, r.scope_reason, r.next_step,
+        ]
+        for r in table.itertuples(index=False)
+    ]
+    write_rows(ws, headers, rows, {5: "#,##0.000", 6: "#,##0.000", 7: "#,##0.000"})
+    for cell in ws.iter_rows(min_row=2, min_col=4, max_col=4):
+        for item in cell:
+            item.number_format = "MMM-YYYY"
+    style_sheet(ws, {1: 14, 2: 46, 3: 14, 4: 14, 5: 18, 6: 16, 7: 14, 8: 14, 9: 24, 10: 40})
+    if rows:
+        ws.auto_filter.ref = f"A1:J{ws.max_row}"
+
+
 def write_clean(ws, clean: pd.DataFrame) -> None:
     rows = clean_rows(clean)
     formats = {
@@ -941,6 +1029,7 @@ def summarize(clean: pd.DataFrame, cells: pd.DataFrame, locations: pd.DataFrame,
     print("spikes", len(spikes), "shortlist", int(spikes.shortlist.sum()) if len(spikes) else 0)
     print("dup_groups", clean.loc[clean.dup_flag != "", ["location", "month", "dist_item"]].drop_duplicates().shape[0])
     print("planning_fallback_rows", int(clean.planning_fallback.sum()))
+    print("unmapped", unmapped_table(clean).groupby("scope_reason").size().to_dict())
     print("size_review_rows", int((clean.scope_reason == "SIZE_REVIEW").sum()))
     print("out", OUT)
 

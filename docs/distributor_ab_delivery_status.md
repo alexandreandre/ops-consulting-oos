@@ -115,3 +115,9 @@ Notes kept locally by Alexandre (`private/meetings/`), shared within the team di
 - **Unmapped codes:** the client's rule (see `decisions.md`, 2026-11-12) replaces a case-by-case answer. Apply it to the 20 codes on the new extract and keep a list of what stays unmapped.
 - **Scope:** C moves to AA items only. B's equivalent is open (client question 18). It decides whether the allocated items, about 70% of B's weighted loss, stay in the cut.
 - **Next dates:** files on SharePoint by 2026-11-16 or 11-17; data review at the 2026-11-19 call.
+
+## Before the client call, 2026-11-19
+
+- **Still on the old extract.** The September–October extract (August replaced) is on the client's SharePoint, not in the team Drive: the B fill-rate file there is still dated 2026-10-12. The B workbook runs from August 2024 to August 2026.
+- **Unmapped rule applied** (see `decisions.md`, 2026-11-19). The rebuilt `distributor_b_v1.xlsx` has a new `Unmapped` sheet: 16 of 21 codes excluded, 5 listed for a Master Data fix (0.4% of volume, 4 cases OOS). Totals, Pareto and spikes unchanged; the B notebook reruns with every check passing. The copy in the team Drive `Working files` is replaced.
+- **To do once the new extract is in the team Drive:** rerun the build, then the notebook. Section 28 will fail on purpose because the totals move; explain the move (two new months, August revised) before sending.
